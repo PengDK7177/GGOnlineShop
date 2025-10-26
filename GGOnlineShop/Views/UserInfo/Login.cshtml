@@ -1,16 +1,47 @@
-﻿<h1>Sign in</h1>
+﻿@{
+    ViewData["Title"] = "Sign in";
+}
+<h1>Sign in</h1>
 
-<form asp-action="Login" method="post">
+<form asp-action="Login" method="post" autocomplete="off" id="loginForm">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <!-- Hidden dummy field to help prevent some browsers from autofilling -->
+    <input type="text" name="fake_user" id="fake-user" style="position: absolute; left: -9999px; top: -9999px;" autocomplete="username" />
+
     <div class="form-group">
         <label>User Name</label>
-        <input name="username" class="form-control" />
+        <input name="username" class="form-control" autocomplete="username" value="" />
     </div>
     <div class="form-group">
         <label>Password</label>
-        <input name="password" type="password" class="form-control" />
+        <input name="password" type="password" class="form-control" autocomplete="current-password" value="" />
     </div>
     <div class="form-group">
         <input type="submit" value="Login" class="btn btn-primary" />
         <a asp-action="Register" class="btn btn-secondary">Registration</a>
     </div>
 </form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Clear any browser-filled values on load to ensure empty boxes.
+        (function () {
+            try {
+                // Small delay to let browser autofill if it will, then clear
+                window.addEventListener('load', function () {
+                    setTimeout(function () {
+                        var u = document.querySelector('input[name="username"]');
+                        var p = document.querySelector('input[name="password"]');
+                        if (u) u.value = '';
+                        if (p) p.value = '';
+                    }, 50);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        })();
+    </script>
+}

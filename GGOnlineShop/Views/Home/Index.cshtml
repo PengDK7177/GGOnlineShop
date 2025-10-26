@@ -1,8 +1,36 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "GGOnlineShop - Homepage";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div id="bg-slider">
+    <img src="~/images/bg1.jpg" alt="Background 1" class="active">
+    <img src="~/images/bg2.jpg" alt="Background 2">
 </div>
+
+<div class="content-wrapper">
+    <h1 class="title">GGOnlineShop</h1>
+    <p class="slogan">!TAKE YOUR CARDS!</p>
+    <div class="btn-group">
+        <a href="@Url.Action("Football", "Category")" class="btn btn-football">FOOTBALL</a>
+        <a href="@Url.Action("New", "Category")" class="btn btn-new">NEW</a>
+        <a href="@Url.Action("Basketball", "Category")" class="btn btn-basketball">BASKETBALL</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const images = document.querySelectorAll('#bg-slider img');
+        let currentIndex = 0;
+        const interval = 5000; // 每张图显示5秒
+
+        setInterval(() => {
+            // 移除当前图的active类
+            images[currentIndex].classList.remove('active');
+            // 切换到下一张
+            currentIndex = (currentIndex + 1) % images.length;
+            // 添加active类到下一张图
+            images[currentIndex].classList.add('active');
+        }, interval);
+    });
+</script>

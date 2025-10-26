@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GGOnlineShop.Models
 {
+    [Table("UserInfos")]
     public class UserInfo
     {
         [Key] // 主键改为int类型
@@ -17,7 +18,11 @@ namespace GGOnlineShop.Models
         public string Username { get; set; } = string.Empty; // 从主键改为普通唯一字段
 
         [MaxLength(200)]
+        public string Avatar { get; set; } = string.Empty;
+        [MaxLength(200)]
         public string AvatarUrl { get; set; } = string.Empty;
+        [NotMapped]
+        public IFormFile? AvatarFile { get; set; } // 用于上传头像文件
         public int? Age { get; set; }
 
         [MaxLength(20)]

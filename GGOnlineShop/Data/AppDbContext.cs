@@ -16,7 +16,7 @@ namespace GGOnlineShop.Data
         // 只保留球星卡相关的DbSet
         public DbSet<Category> Categories { get; set; }
         public DbSet<Card> Cards { get; set; }
-        public DbSet<UserInfo> Users { get; set; }
+        public DbSet<UserInfo> UserInfos { get; set; }
         public DbSet<UserCard> UserCards { get; set; }
         public DbSet<CartItem> CartItems { get; set; } // 购物车项
 

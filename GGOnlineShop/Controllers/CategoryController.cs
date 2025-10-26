@@ -15,6 +15,7 @@ namespace GGOnlineShop.Controllers
             _dbContext = dbContext;
         }
 
+
         // 商品“All”视图 - 从数据库查询所有商品
         public async Task<IActionResult> All()
         {
@@ -36,6 +37,7 @@ namespace GGOnlineShop.Controllers
         {
             return View();
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Create(Card card)
