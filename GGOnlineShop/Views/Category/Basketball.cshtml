@@ -1,0 +1,18 @@
+﻿@model GGOnlineShop.Models.Category
+@{
+    ViewData["Title"] = "Basketball 分类";
+    Layout = "_Layout";
+    var subCategories = ViewData["SubCategories"] as List<GGOnlineShop.Models.Category>;
+}
+
+<h1>Basketball 二级分类页面</h1>
+
+<h2>三级分类导航</h2>
+<div class="sub-category-buttons">
+    @foreach (var subCat in subCategories)
+    {
+        <a asp-action="SubCategory" asp-controller="Category" asp-route-id="@subCat.Id" class="btn">@subCat.Name</a>
+    }
+</div>
+
+<!-- 可添加Basketball分类下的其他内容（如卡片列表） -->

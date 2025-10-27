@@ -21,4 +21,27 @@ body {
   margin-bottom: 60px;
 }
 
+/* global layout adjustments to avoid gutters and reserve footer space */
+:root {
+  --footer-height: 60px;
+}
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* prevent horizontal scroll exposing page background */
+}
+
+/* reserve space so fixed footer does not overlap content */
+body {
+  padding-bottom: var(--footer-height);
+}
+
+/* Ensure fixed footer sits on top of full-bleed sections */
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 999;
+}

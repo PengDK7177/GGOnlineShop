@@ -6,9 +6,9 @@
     <title>@ViewData["Title"] - GGOnlineShop</title>
     <style>
         .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+           
+         
+            z-index: 999; /* ensure footer stays above page content/background */
         }
 
         header {
@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/Home.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-grid.css" />
+    <link rel="stylesheet" href="~/css/football.css" />
 </head>
 <body>
     <header>
@@ -49,8 +50,8 @@
                                 All
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" asp-action="Index" asp-controller="Category" asp-route-id="2">Basketball</a></li>
-                                <li><a class="dropdown-item" asp-action="Index" asp-controller="Category" asp-route-id="3">Football</a></li>
+                                <li><a class="dropdown-item" asp-action="Basketball" asp-controller="Category" asp-route-id="2">Basketball</a></li>
+                                <li><a class="dropdown-item" asp-action="Football" asp-controller="Category" asp-route-id="3">Football</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">

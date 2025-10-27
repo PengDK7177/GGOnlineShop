@@ -1,0 +1,32 @@
+﻿@model GGOnlineShop.Models.Category
+@{
+    ViewData["Title"] = "Football 分类";
+    Layout = "_Layout";
+    var subCategories = ViewData["SubCategories"] as List<GGOnlineShop.Models.Category>;
+    // cache-buster for the image so browser fetches the updated file during development
+    var bgUrl = Url.Content("~/images/football-bg.jpg") + "?v=" + DateTime.Now.Ticks;
+}
+<link rel="stylesheet" href="~/css/football.css" asp-append-version="true" />
+
+<!-- Full-screen background layer (mirrors Index.cshtml approach) -->
+<div id="football-bg-slider">
+    <img src="@bgUrl" alt="Football background" class="active" />
+</div>
+
+<!-- Foreground content -->
+<div class="content-wrapper">
+    <h1 class="title">Football</h1>
+    <div class="sub-category-buttons">
+        @if (subCategories != null && subCategories.Count > 0)
+        {
+            foreach (var subCat in subCategories)
+            {
+                <a asp-action="SubCategory" asp-controller="Category" asp-route-id="@subCat.Id" class="football-btn">@subCat.Name</a>
+            }
+        }
+        else
+        {
+            <div class="text-muted">No sub-categories available.</div>
+        }
+    </div>
+</div>

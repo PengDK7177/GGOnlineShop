@@ -17,7 +17,7 @@ namespace GGOnlineShop.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // 1. 注册功能
+        // 注册功能
         public IActionResult Register()
         {
             return View();
@@ -35,9 +35,9 @@ namespace GGOnlineShop.Controllers
                     return View(user);
                 }
 
-                // Hash the password before saving
-                var hasher = new PasswordHasher<UserInfo>();
-                user.Password = hasher.HashPassword(user, user.Password);
+                // Store password as plain text (test project).
+                // NOTE: This is insecure for production.
+                // user.Password remains as provided;
 
                 if (user.AvatarFile != null && user.AvatarFile.Length > 0)
                 {
@@ -58,7 +58,7 @@ namespace GGOnlineShop.Controllers
             return View(user);
         }
 
-        // 2. 登录功能
+        //  登录功能
         public IActionResult Login()
         {
             return View();
@@ -81,23 +81,33 @@ namespace GGOnlineShop.Controllers
                 return View();
             }
 
-            var hasher = new PasswordHasher<UserInfo>();
-            var verifyResult = hasher.VerifyHashedPassword(user, user.Password, password ?? string.Empty);
+            bool authenticated = false;
 
-            if (verifyResult == PasswordVerificationResult.Success)
-            {
-                HttpContext.Session.SetInt32("UserId", user.Id);
-                return RedirectToAction("Index", "Home");
-            }
-
-            // Fallback for accounts that still store plain-text passwords:
-            // if stored password equals the provided plain password, re-hash and accept login.
+            // Primary: plain-text comparison (reverted behavior for test project)
             if (!string.IsNullOrEmpty(password) && user.Password == password)
             {
-                user.Password = hasher.HashPassword(user, password);
-                _context.Update(user);
-                await _context.SaveChangesAsync();
+                authenticated = true;
+            }
+            else
+            {
+                // Backwards compatibility: if stored value is a hashed password, try verify
+                try
+                {
+                    var hasher = new PasswordHasher<UserInfo>();
+                    var verifyResult = hasher.VerifyHashedPassword(user, user.Password, password ?? string.Empty);
+                    if (verifyResult == PasswordVerificationResult.Success)
+                    {
+                        authenticated = true;
+                    }
+                }
+                catch
+                {
+                    // Ignore format/verification errors; do not authenticate
+                }
+            }
 
+            if (authenticated)
+            {
                 HttpContext.Session.SetInt32("UserId", user.Id);
                 return RedirectToAction("Index", "Home");
             }
@@ -106,7 +116,7 @@ namespace GGOnlineShop.Controllers
             return View();
         }
 
-        // 3. 退出登录
+        //  退出登录
         public IActionResult Logout()
         {
             HttpContext.Session.Remove("UserId");
@@ -133,20 +143,17 @@ namespace GGOnlineShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UserInfo user)
         {
-            // Load original user first so we can re-show DB values on validation failure
             var originalUser = await _context.UserInfos.FindAsync(user.Id);
             if (originalUser == null)
             {
                 return NotFound();
             }
 
-            // Make password optional for profile edits (the Register flow still enforces it)
             ModelState.Remove(nameof(UserInfo.Password));
             ModelState.Remove(nameof(UserInfo.ConfirmPassword));
 
             if (!ModelState.IsValid)
             {
-                // Return the original user from DB so existing AvatarUrl/Username remain populated
                 return View(originalUser);
             }
 
@@ -162,11 +169,10 @@ namespace GGOnlineShop.Controllers
                 originalUser.AvatarUrl = $"/uploads/avatars/{fileName}";
             }
 
-            // If user supplied a new password, hash it before saving.
+            // Store new password as plain text (test project)
             if (!string.IsNullOrEmpty(user.Password))
             {
-                var hasher = new PasswordHasher<UserInfo>();
-                originalUser.Password = hasher.HashPassword(originalUser, user.Password);
+                originalUser.Password = user.Password;
             }
 
             originalUser.Age = user.Age;
@@ -191,7 +197,6 @@ namespace GGOnlineShop.Controllers
                 return Forbid();
             }
 
-            // Ensure AvatarUrl returns a usable path for the client
             var avatarUrl = string.IsNullOrEmpty(user.AvatarUrl) ? "/images/default-avatar.jpg" : user.AvatarUrl;
             return Json(new { id = user.Id, username = user.Username, avatarUrl });
         }
