@@ -19,6 +19,7 @@ namespace GGOnlineShop.Data
         public DbSet<UserInfo> UserInfos { get; set; }
         public DbSet<UserCard> UserCards { get; set; }
         public DbSet<CartItem> CartItems { get; set; } // 购物车项
+        public DbSet<SubCategory> SubCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,7 +31,7 @@ namespace GGOnlineShop.Data
             modelBuilder.ApplyConfiguration(new UserCardConfiguration());
             modelBuilder.ApplyConfiguration(new UserInfoConfiguration());
             
-
+                
           
 
             // 配置CartItem的关联

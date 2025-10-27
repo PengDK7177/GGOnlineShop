@@ -1,0 +1,20 @@
+﻿@model GGOnlineShop.Models.Card
+@{
+    ViewData["Title"] = "球星卡详情 - " + Model.PlayerName;
+    Layout = "_Layout";
+}
+
+<h1>球星卡详情</h1>
+<div class="card-detail">
+    <div class="card-img">
+        < img src="@Model.CardImg" alt="@Model.PlayerName" />
+    </div>
+    <div class="card-info">
+        <h2>@Model.PlayerName</h2>
+        <p>Team: @Model.Team</p>
+        <p>CardYear: @Model.CardYear</p>
+        <p>CardPrice: @Model.CardPrice</p>
+        <p>CardStock: @Model.CardStock</p>
+        <p>CreateTime: @Model.CreateTime</p>
+    </div>
+</div>

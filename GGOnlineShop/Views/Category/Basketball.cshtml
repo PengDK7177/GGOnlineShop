@@ -3,16 +3,28 @@
     ViewData["Title"] = "Basketball 分类";
     Layout = "_Layout";
     var subCategories = ViewData["SubCategories"] as List<GGOnlineShop.Models.Category>;
+    var bgUrl = Url.Content("~/images/basketball-bg.jpg") + "?v=" + DateTime.Now.Ticks;
 }
 
-<h1>Basketball 二级分类页面</h1>
+<div id="basketball-bg-slider">
+    <img src="@bgUrl" alt="basketball background" class="active" />
+</div>
 
-<h2>三级分类导航</h2>
-<div class="sub-category-buttons">
-    @foreach (var subCat in subCategories)
-    {
-        <a asp-action="SubCategory" asp-controller="Category" asp-route-id="@subCat.Id" class="btn">@subCat.Name</a>
-    }
+<div class="content-wrapper">
+    <h1 class="title">Basketball</h1>
+    <div class="sub-category-buttons">
+        @if (subCategories != null && subCategories.Count > 0)
+        {
+            foreach (var subCat in subCategories)
+            {
+                <a asp-action="SubCategory" asp-controller="Category" asp-route-id="@subCat.Id" class="basketball-btn">@subCat.Name</a>
+            }
+        }
+        else
+        {
+            <div class="text-muted">No sub-categories available.</div>
+        }
+    </div>
 </div>
 
 <!-- 可添加Basketball分类下的其他内容（如卡片列表） -->

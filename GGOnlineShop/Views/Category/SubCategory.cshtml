@@ -1,0 +1,29 @@
+﻿@model List<GGOnlineShop.Models.Card>
+@{
+    ViewData["Title"] = "CardsCategory";
+}
+
+<!-- 页面标题 -->
+<h1>Cards</h1>
+
+<!-- 卡片列表容器：网格布局 -->
+<div class="card-grid">
+    @foreach (var card in Model)
+    {
+        <!-- 单个球星卡卡片：点击跳转详情页 -->
+        <a href=" " Details", "Category" , new { id=card.Id })" class="card-item">
+            <div class="card-img">
+                <img src="@card.CardImg" alt="@card.PlayerName 球星卡" />
+            </div>
+            <div class="card-info">
+                <h3>@card.PlayerName</h3>
+                <p>球队：@card.Team</p>
+                <p>年份：@card.CardYear</p>
+                <p>价格：¥@card.CardPrice</p>
+                <p>库存：@card.CardStock 张</p>
+            </div>
+        </a>
+    }
+</div>
+
+<!-- 样式（保持不变） -->

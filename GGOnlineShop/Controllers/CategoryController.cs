@@ -51,7 +51,7 @@ namespace GGOnlineShop.Controllers
             // 传递二级分类和三级分类数据到视图
             ViewData["SubCategories"] = subCategories;
             // 将父分类作为模型传递给视图
-            return View(basketballCategory);
+            return View();
         }
 
         // Football二级分类页面（含三级分类数据）
@@ -77,7 +77,7 @@ namespace GGOnlineShop.Controllers
         }
 
         // 三级分类页面（示例：NBA页面）
-        public IActionResult SubNBA(int id)
+        public IActionResult SubCategory(int id)
         {
             var subNBA = _dbContext.Categories.FirstOrDefault(c => c.Id == id);
             if (subNBA == null)
@@ -141,11 +141,11 @@ namespace GGOnlineShop.Controllers
         {
             // 2. 修改内部逻辑：将查询条件改为"La Liga"（确保数据库中分类名匹配）
             var serieaCategory = await _dbContext.Categories
-                .FirstOrDefaultAsync(c => c.Name == "La Liga");
+                .FirstOrDefaultAsync(c => c.Name == "Serie A");
 
             if (serieaCategory == null)
             {
-                return NotFound("英超分类不存在"); // 提示信息同步修改
+                return NotFound("意甲分类不存在"); // 提示信息同步修改
             }
 
             // 获取西甲下的所有子分类（逻辑不变，仅关联的分类ID变化）
@@ -171,6 +171,26 @@ namespace GGOnlineShop.Controllers
             // 获取西甲下的所有子分类（逻辑不变，仅关联的分类ID变化）
             var subCategories = await _dbContext.SubCategories
                 .Where(sc => sc.CategoryId == laLigaCategory.Id)
+                .ToListAsync();
+
+            // 3. 视图关联：若使用默认视图名，需创建 SubLaLiga.cshtml 视图
+            // （若想复用原有视图，可指定视图名：return View("SubCategory", subCategories);）
+            return View(subCategories);
+        }
+        public async Task<IActionResult> SubPremierLeague() // 方法名改为 SubLaLiga
+        {
+            // 2. 修改内部逻辑：将查询条件改为"Premier League"（确保数据库中分类名匹配）
+            var premierleagueCategory = await _dbContext.Categories
+                .FirstOrDefaultAsync(c => c.Name == "Premier League");
+
+            if (premierleagueCategory == null)
+            {
+                return NotFound("英超分类不存在"); // 提示信息同步修改
+            }
+
+            // 获取西甲下的所有子分类（逻辑不变，仅关联的分类ID变化）
+            var subCategories = await _dbContext.SubCategories
+                .Where(sc => sc.CategoryId == premierleagueCategory.Id)
                 .ToListAsync();
 
             // 3. 视图关联：若使用默认视图名，需创建 SubLaLiga.cshtml 视图
