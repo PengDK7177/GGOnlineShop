@@ -11,16 +11,16 @@
     @foreach (var card in Model)
     {
         <!-- 单个球星卡卡片：点击跳转详情页 -->
-        <a href=" " Details", "Category" , new { id=card.Id })" class="card-item">
+        <a asp-action="Details" asp-controller="Category" asp-route-id="@card.Id" class="card-item">
             <div class="card-img">
                 <img src="@card.CardImg" alt="@card.PlayerName 球星卡" />
             </div>
             <div class="card-info">
                 <h3>@card.PlayerName</h3>
-                <p>球队：@card.Team</p>
-                <p>年份：@card.CardYear</p>
-                <p>价格：¥@card.CardPrice</p>
-                <p>库存：@card.CardStock 张</p>
+                <p>Team：@card.Team</p>
+                <p>Year：@card.CardYear</p>
+                <p>Price：￡@card.CardPrice</p>
+                <p>Stock：@card.CardStock </p>
             </div>
         </a>
     }

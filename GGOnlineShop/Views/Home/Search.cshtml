@@ -18,13 +18,13 @@ else
         {
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    < img src="@card.CardImg" class="card-img-top" alt="@card.PlayerName">
+                    <img src="@card.CardImg" class="card-img-top" alt="@card.PlayerName">
                     <div class="card-body">
                         <h5 class="card-title">@card.PlayerName</h5>
                         <p class="card-text">Categories: @card.Category.Name</p>
                         <p class="card-text">Price: ¥@card.CardPrice</p>
-                        <a asp-action="Details" asp-controller="Card" asp-route-id="@card.Id" class="btn btn-primary">Check Details</a>
-                        <a asp-action="AddToCart" asp-controller="Cart" asp-route-id="@card.Id" class="btn btn-success">Add to Cart</a>
+                        <a asp-action="CardDetails" asp-controller="Category" asp-route-id="@card.Id" class="card-item btn btn-primary">Check Details</a>
+                        <a asp-action="Index" asp-controller="Cart" asp-route-id="@card.Id" class="btn btn-success">Add to Cart</a>
                     </div>
                 </div>
             </div>

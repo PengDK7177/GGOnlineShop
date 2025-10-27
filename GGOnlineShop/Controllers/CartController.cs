@@ -17,87 +17,145 @@ namespace GGOnlineShop.Controllers
             _context = context;
         }
 
+        // GET: /Cart
         public async Task<IActionResult> Index()
         {
-            // Fix CS0019: Convert User.Identity.Name (string) to int for comparison with UserId (int)
-            if (!int.TryParse(User.Identity?.Name, out int userId))
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
             {
-                return BadRequest("Invalid user identifier.");
+                // Not logged in -> redirect to login page
+                return RedirectToAction("Login", "UserInfo");
             }
 
-            // Fix CS8602: Add null check for User.Identity
             var cartItems = await _context.CartItems
-                .Include(ci => ci.Card) // 关联球星卡
-                .Where(ci => ci.UserId == userId) // 假设用户已登录，用Username标识
+                .Include(ci => ci.Card)
+                .Where(ci => ci.UserId == userId.Value)
                 .ToListAsync();
+
+            decimal subtotal = cartItems.Sum(ci => (decimal)ci.Card.CardPrice * ci.Quantity);
+            ViewData["Subtotal"] = subtotal;
 
             return View(cartItems);
         }
 
-        public async Task<IActionResult> AddToCart(int id)
+        // POST: /Cart/AddToCart
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToCart(int cardId)
         {
-            var card = await _context.Cards.FindAsync(id); // 查找球星卡
-
-            if (card == null)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
             {
-                return NotFound();
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, needLogin = true, message = "Please log in." });
+                }
+                return RedirectToAction("Login", "UserInfo");
             }
 
-            // Fix CS0019: Convert User.Identity.Name (string) to int for comparison with UserId (int)
-            if (!int.TryParse(User.Identity?.Name, out int userId))
-            {
-                return BadRequest("Invalid user identifier.");
-            }
+            var existing = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.CardId == cardId && ci.UserId == userId.Value);
 
-            // Fix CS8602: Add null check for User.Identity
-            var existingItem = await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.CardId == id && ci.UserId == userId);
-
-            if (existingItem != null)
+            if (existing != null)
             {
-                existingItem.Quantity++; // 已有则数量+1
+                existing.Quantity++;
+                _context.Update(existing);
             }
             else
             {
+                var card = await _context.Cards.FindAsync(cardId);
+                if (card == null)
+                {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = false, message = "Card not found." });
+                    }
+                    return NotFound();
+                }
+
                 var cartItem = new CartItem
                 {
                     CardId = card.Id,
-                    UserId = userId,
+                    UserId = userId.Value,
                     Quantity = 1
                 };
-
                 _context.CartItems.Add(cartItem);
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
-        }
 
-        public async Task<IActionResult> RemoveFromCart(int id)
-        {
-            // Fix CS0019: Convert User.Identity.Name (string) to int for comparison with UserId (int)
-            if (!int.TryParse(User.Identity?.Name, out int userId))
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                return BadRequest("Invalid user identifier.");
+                // Return JSON for AJAX callers (include new quantity if useful)
+                var qty = existing != null ? existing.Quantity : 1;
+                return Json(new { success = true, message = "Added to cart", quantity = qty });
             }
 
-            // Fix CS8602: Add null check for User.Identity
-            var cartItem = await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.CardId == id && ci.UserId == userId);
+            return RedirectToAction(nameof(Index));
+        }
 
-            if (cartItem != null)
+        // GET: /Cart/RemoveFromCart/5  (decrease quantity by 1 or remove)
+        public async Task<IActionResult> RemoveFromCart(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
             {
-                _context.CartItems.Remove(cartItem);
+                return RedirectToAction("Login", "UserInfo");
+            }
+
+            var existing = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.CardId == id && ci.UserId == userId.Value);
+
+            if (existing != null)
+            {
+                if (existing.Quantity > 1)
+                {
+                    existing.Quantity--;
+                    _context.Update(existing);
+                }
+                else
+                {
+                    _context.CartItems.Remove(existing);
+                }
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
+        // POST: /Cart/RemoveFromCart (full remove via form)
+        [HttpPost, ActionName("RemoveFromCart")]
+        public async Task<IActionResult> RemoveFromCartPost(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "UserInfo");
+            }
+
+            var item = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.CardId == id && ci.UserId == userId.Value);
+
+            if (item != null)
+            {
+                _context.CartItems.Remove(item);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Optional: checkout view
         public IActionResult Checkout()
         {
-            // 结算逻辑（可后续扩展）
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "UserInfo");
+            }
+
             return View();
         }
     }
+    
 }

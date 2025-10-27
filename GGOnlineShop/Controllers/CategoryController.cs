@@ -23,15 +23,8 @@ namespace GGOnlineShop.Controllers
             return View(cards);
         }
 
-        // 商品详情 - 从数据库查询单个商品
-        public async Task<IActionResult> Details(int id)
-        {
-            var card = await _dbContext.Cards.FirstOrDefaultAsync(p => p.Id == id);
-            if (card == null)
-                return NotFound();
-            return View(card);
-        }
-
+      
+     
         // Basketball二级分类页面（含三级分类数据）
         public IActionResult Basketball()
         {
@@ -109,10 +102,14 @@ namespace GGOnlineShop.Controllers
         }
 
         // 球星卡详情页面
-        public IActionResult Details()
+        public async Task<IActionResult> Details(int id)
         {
-         
-            return View();
+            var card = await _dbContext.Cards.FirstOrDefaultAsync(p => p.Id == id);
+            if (card == null)
+                return NotFound();
+
+            // explicitly render the CardDetails view (existing file Views/Category/CardDetails.cshtml)
+            return View("CardDetails", card);
         }
 
         // 新增商品（可选，用于测试数据录入）
