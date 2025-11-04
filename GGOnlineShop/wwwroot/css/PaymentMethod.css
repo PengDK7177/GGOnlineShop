@@ -1,0 +1,63 @@
+﻿/* Payment method layout */
+.payment-methods {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+    /* Each choice aligns the radio and the image/text */
+    .payment-methods label {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .35rem .6rem;
+        border-radius: .5rem;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color .12s ease, box-shadow .12s ease;
+        border: 1px solid transparent;
+    }
+
+    /* Constrain logo sizes */
+    .payment-methods img {
+        width: 96px; /* desired width */
+        max-width: 120px; /* won't grow beyond this */
+        height: auto; /* preserve aspect ratio */
+        display: block;
+    }
+
+    /* Visual focus/selected states */
+    .payment-methods input[type="radio"]:focus + img,
+    .payment-methods input[type="radio"]:focus-visible + img {
+        outline: 2px solid #86b7fe;
+        outline-offset: 3px;
+    }
+
+    .payment-methods input[type="radio"]:checked + img,
+    .payment-methods input[type="radio"]:checked + span img {
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.12);
+        border-radius: 8px;
+    }
+
+    /* If you keep the radio visible, space it */
+    .payment-methods input[type="radio"] {
+        margin: 0;
+        transform: translateY(0);
+    }
+
+    /* For the "Cash on Delivery" text choice keep consistent spacing */
+    .payment-methods label .text-choice {
+        font-weight: 600;
+    }
+
+/* Small screens: reduce logo width */
+@media (max-width: 576px) {
+    .payment-methods img {
+        width: 72px;
+    }
+
+    .payment-methods {
+        gap: .6rem;
+    }

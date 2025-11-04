@@ -45,6 +45,7 @@ namespace GGOnlineShop.Migrations
                     AvatarUrl = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Age = table.Column<int>(type: "int", nullable: true),
                     Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     FavoriteTeam = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>

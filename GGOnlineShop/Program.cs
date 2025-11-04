@@ -1,12 +1,17 @@
 using GGOnlineShop.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Session;
+using GGOnlineShop.Models;
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<GGOnlineShop.Filters.AdminAuthFilter>();
 builder.Services.AddSession(option=>
 {
     option.IdleTimeout = TimeSpan.FromMinutes(1); // 设置会话超时时间
@@ -18,13 +23,25 @@ var app = builder.Build();
 
 
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// --- dev-time seed admin (only for testing) ---
+using (var scope = app.Services.CreateScope())
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // create admin if missing
+    if (!db.UserInfos.Any(u => u.Username == "admin"))
+    {
+        db.UserInfos.Add(new UserInfo
+        {
+            Username = "admin",
+            Email = "admin@local.test",
+            Password = "admin123!", // test only
+            IsAdmin = true,
+            AvatarUrl = "/images/default-avatar.jpg"
+        });
+        db.SaveChanges();
+    }
 }
+// --- end seed ---
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

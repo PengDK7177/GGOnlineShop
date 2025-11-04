@@ -1,0 +1,97 @@
+﻿@model GGOnlineShop.Models.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout - Payment";
+}
+
+<link rel="stylesheet" href="~/css/PaymentMethod.css" asp-append-version="true" />
+
+<form asp-action="Checkout" asp-controller="Cart" method="post" novalidate>
+    @Html.AntiForgeryToken()
+
+    <div class="checkout-container">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <!-- 支付方式选择 -->
+        <div class="payment-methods">
+            <label>
+                <input asp-for="SelectedPaymentMethod" type="radio" value="Mastercard" />
+                <img src="~/images/mastercard.png" alt="Mastercard" />
+            </label>
+            <label>
+                <input asp-for="SelectedPaymentMethod" type="radio" value="Visa" />
+                <img src="~/images/visa.png" alt="Visa" />
+            </label>
+            <label>
+                <input asp-for="SelectedPaymentMethod" type="radio" value="PayPal" />
+                <img src="~/images/paypal.png" alt="PayPal" />
+            </label>
+            <label>
+                <input asp-for="SelectedPaymentMethod" type="radio" value="CashOnDelivery" />
+                Cash on Delivery
+            </label>
+        </div>
+
+        <!-- 信用卡信息表单（仅当选择信用卡时显示，这里简化为始终显示） -->
+        <div class="card-details">
+            <div class="form-group">
+                <label asp-for="CardNumber"></label>
+                <input asp-for="CardNumber" class="form-control" />
+                <span asp-validation-for="CardNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CardholderName"></label>
+                <input asp-for="CardholderName" class="form-control" />
+                <span asp-validation-for="CardholderName" class="text-danger"></span>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label asp-for="ExpiryMonth"></label>
+                    <select asp-for="ExpiryMonth" class="form-control">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                    <span asp-validation-for="ExpiryMonth" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-6">
+                    <label asp-for="ExpiryYear"></label>
+                    <select asp-for="ExpiryYear" class="form-control">
+                        @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 10; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                    <span asp-validation-for="ExpiryYear" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="Cvc"></label>
+                <input asp-for="Cvc" class="form-control" />
+                <span asp-validation-for="Cvc" class="text-danger"></span>
+            </div>
+            <div class="form-check">
+                <input asp-for="SavePaymentDetails" class="form-check-input" />
+                <label asp-for="SavePaymentDetails" class="form-check-label"></label>
+            </div>
+        </div>
+
+        <!-- 订单金额汇总 -->
+        <div class="order-summary">
+            <p>Subtotal (items): ￡@(Model.TotalAmount - 5.5m)</p>
+            <p>Home delivery cost: ￡5.5</p>
+            <hr />
+            <h4>TOTAL AMOUNT: ￡@Model.TotalAmount</h4>
+        </div>
+
+        <!-- 确认支付按钮 -->
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-lg">CONFIRM PAYMENT</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @Html.Partial("_ValidationScriptsPartial")
+}

@@ -1,0 +1,38 @@
+﻿@model GGOnlineShop.Models.Card
+@{
+    ViewData["Title"] = "Create Card";
+}
+<div class="container py-4">
+    <h2>Create Card</h2>
+    <form asp-action="CreateCard" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label asp-for="PlayerName"></label>
+            <input asp-for="PlayerName" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Team"></label>
+            <input asp-for="Team" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="CardYear"></label>
+            <input asp-for="CardYear" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="CardPrice"></label>
+            <input asp-for="CardPrice" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="CardStock"></label>
+            <input asp-for="CardStock" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label>Image</label>
+            <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+        </div>
+        <div class="mb-3">
+            <button class="btn btn-primary" type="submit">Create</button>
+            <a asp-action="Cards" class="btn btn-secondary ms-2">Back</a>
+        </div>
+    </form>
+</div>

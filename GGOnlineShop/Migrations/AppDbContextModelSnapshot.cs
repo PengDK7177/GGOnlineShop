@@ -141,14 +141,14 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 1,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2204),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2660),
                             Name = "All",
                             SortOrder = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2247),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2698),
                             Name = "Basketball",
                             ParentId = 1,
                             SortOrder = 2
@@ -156,7 +156,7 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 3,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2249),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2700),
                             Name = "Football",
                             ParentId = 1,
                             SortOrder = 3
@@ -164,7 +164,7 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 4,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2267),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2719),
                             Name = "NBA",
                             ParentId = 2,
                             SortOrder = 4
@@ -172,7 +172,7 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 5,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2268),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2720),
                             Name = "FIBA",
                             ParentId = 2,
                             SortOrder = 5
@@ -180,7 +180,7 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 6,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2269),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2721),
                             Name = "CBA",
                             ParentId = 2,
                             SortOrder = 6
@@ -188,7 +188,7 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 7,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2291),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2796),
                             Name = "Serie A",
                             ParentId = 3,
                             SortOrder = 7
@@ -196,7 +196,7 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 8,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2292),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2797),
                             Name = "La Liga",
                             ParentId = 3,
                             SortOrder = 8
@@ -204,11 +204,34 @@ namespace GGOnlineShop.Migrations
                         new
                         {
                             Id = 9,
-                            CreateTime = new DateTime(2025, 10, 26, 7, 32, 8, 884, DateTimeKind.Local).AddTicks(2293),
+                            CreateTime = new DateTime(2025, 11, 4, 3, 18, 26, 441, DateTimeKind.Local).AddTicks(2799),
                             Name = "Premier League",
                             ParentId = 3,
                             SortOrder = 9
                         });
+                });
+
+            modelBuilder.Entity("GGOnlineShop.Models.SubCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("SubCategories");
                 });
 
             modelBuilder.Entity("GGOnlineShop.Models.UserCard", b =>
@@ -272,6 +295,11 @@ namespace GGOnlineShop.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("FavoriteTeam")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -281,6 +309,11 @@ namespace GGOnlineShop.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsAdmin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -293,6 +326,9 @@ namespace GGOnlineShop.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -342,6 +378,17 @@ namespace GGOnlineShop.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("GGOnlineShop.Models.SubCategory", b =>
+                {
+                    b.HasOne("GGOnlineShop.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("GGOnlineShop.Models.UserCard", b =>

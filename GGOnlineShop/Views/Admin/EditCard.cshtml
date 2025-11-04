@@ -1,0 +1,43 @@
+﻿@model GGOnlineShop.Models.Card
+@{
+    ViewData["Title"] = "Edit Card";
+}
+<div class="container py-4">
+    <h2>Edit Card</h2>
+    <form asp-action="EditCard" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div class="mb-3">
+            <label asp-for="PlayerName"></label>
+            <input asp-for="PlayerName" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Team"></label>
+            <input asp-for="Team" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="CardYear"></label>
+            <input asp-for="CardYear" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="CardPrice"></label>
+            <input asp-for="CardPrice" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="CardStock"></label>
+            <input asp-for="CardStock" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label>Replace Image</label>
+            <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+            @if (!string.IsNullOrEmpty(Model.CardImg))
+            {
+                <img src="@Model.CardImg" style="width:120px;margin-top:10px" />
+            }
+        </div>
+        <div class="mb-3">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a asp-action="Cards" class="btn btn-secondary ms-2">Back</a>
+        </div>
+    </form>
+</div>

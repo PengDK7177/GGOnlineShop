@@ -1,4 +1,5 @@
-﻿using GGOnlineShop.Data;
+﻿using System.Text.RegularExpressions;
+using GGOnlineShop.Data;
 using GGOnlineShop.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -70,16 +71,25 @@ namespace GGOnlineShop.Controllers
         }
 
         // 三级分类页面（示例：NBA页面）
-        public IActionResult SubCategory(int id)
+        public async Task<IActionResult> SubCategory(int id)
         {
-            var subNBA = _dbContext.Categories.FirstOrDefault(c => c.Id == id);
-            if (subNBA == null)
+            var subCategory = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            if (subCategory == null)
             {
                 return NotFound();
             }
-            var cards = _dbContext.Cards
-               .Where(c => c.CategoryId == id) // 通过 CategoryId 关联三级分类
-               .ToList();
+
+            // load cards under this subcategory
+            var cards = await _dbContext.Cards
+                .Where(c => c.CategoryId == id)
+                .ToListAsync();
+
+            //  safe css key: lowercase, replace non-word with '-'
+            var key = Regex.Replace(subCategory.Name ?? string.Empty, @"[^\w]+", "-").Trim('-').ToLowerInvariant();
+
+            ViewData["SubCategoryName"] = subCategory.Name;
+            ViewData["SubCategoryKey"] = string.IsNullOrWhiteSpace(key) ? "subcategory" : key;
+
             return View(cards);
         }
 

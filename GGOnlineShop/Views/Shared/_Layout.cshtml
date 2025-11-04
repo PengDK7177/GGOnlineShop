@@ -18,8 +18,8 @@
 
         /* 头像圆形样式优化 */
         #userAvatar {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             object-fit: cover;
             margin-right: 8px;
@@ -34,6 +34,8 @@
     <link rel="stylesheet" href="~/css/basketball.css" />
     <link rel="stylesheet" href="~/css/SubCategory.css" />
     <link rel="stylesheet" href="~/css/CardDetails.css" />
+    <link rel="stylesheet" href="~/css/PaymentMethod.css" />
+    <link rel="stylesheet" href="~/css/PaymentSuccess.css" />
 </head>
 <body>
     <header>
@@ -76,8 +78,14 @@
                             else
                             {
                                 <div class="d-flex align-items-center">
-                                    <!-- Use a sensible default src and an onerror fallback. Remove conflicting inline sizes. -->
                                     <img id="userAvatar" src="/images/default-avatar.jpg" alt="User avatar" onerror="this.onerror=null;this.src='/images/default-avatar.jpg';" />
+                                    @{
+                                        var isAdmin = (Context.Session.GetString("IsAdmin") ?? "0") == "1";
+                                    }
+                                    @if (isAdmin)
+                                    {
+                                        <a asp-controller="Admin" asp-action="Cards" class="btn btn-outline-light ms-2">Admin</a>
+                                    }
                                     <a asp-action="Edit" asp-controller="UserInfo" class="btn btn-outline-light ms-2">Profile</a>
                                     <a asp-action="Logout" asp-controller="UserInfo" class="btn btn-light ms-2">Logout</a>
                                 </div>
@@ -110,7 +118,7 @@
                     type: "GET",
                     dataType: "json",
                     success: function (user) {
-                        var avatar = (user && user.avatarUrl) ? user.avatarUrl : "/images/default-avatar.jpg";
+                        var avatar = (user && user.avatarUrl) ? user.avatarUrl : "/images/default-avatar.png";
                         // Ensure avatar path is absolute and append a cache-busting token
                         if (avatar.indexOf('/') !== 0 && avatar.indexOf('http') !== 0) {
                             avatar = '/' + avatar;

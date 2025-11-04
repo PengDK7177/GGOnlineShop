@@ -1,20 +1,25 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using GGOnlineShop.Data;
 using GGOnlineShop.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace GGOnlineShop.Controllers
 {
     public class CartController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CartController(AppDbContext context)
+        // Single constructor that receives all required services
+        public CartController(AppDbContext context, IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         // GET: /Cart
@@ -145,8 +150,8 @@ namespace GGOnlineShop.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Optional: checkout view
-        public IActionResult Checkout()
+        // GET: /Cart/Checkout
+        public async Task<IActionResult> Checkout()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null)
@@ -154,8 +159,138 @@ namespace GGOnlineShop.Controllers
                 return RedirectToAction("Login", "UserInfo");
             }
 
+            // Load cart items from DB for the logged-in user
+            var cartItems = await _context.CartItems
+                .Include(ci => ci.Card)
+                .Where(ci => ci.UserId == userId.Value)
+                .ToListAsync();
+
+            decimal subtotal = cartItems.Sum(i => (decimal)i.Card.CardPrice * i.Quantity);
+            decimal deliveryCost = 5.5m; // fixed delivery cost
+            decimal total = subtotal + deliveryCost;
+
+            var viewModel = new CheckoutViewModel
+            {
+                TotalAmount = total
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: /Cart/Checkout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Checkout(CheckoutViewModel model)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "UserInfo");
+            }
+
+            // Validate model first
+            if (!ModelState.IsValid)
+            {
+                // Recompute totals to redisplay view with correct totals
+                var existingItems = await _context.CartItems
+                    .Include(ci => ci.Card)
+                    .Where(ci => ci.UserId == userId.Value)
+                    .ToListAsync();
+
+                decimal subtotal = existingItems.Sum(i => (decimal)i.Card.CardPrice * i.Quantity);
+                decimal deliveryCost = 5.5m;
+                model.TotalAmount = subtotal + deliveryCost;
+
+                return View(model);
+            }
+
+            // Validate credit card info for card payments
+            if (model.SelectedPaymentMethod is CheckoutViewModel.PaymentMethod.Mastercard or CheckoutViewModel.PaymentMethod.Visa)
+            {
+                if (string.IsNullOrEmpty(model.CardNumber) ||
+                    string.IsNullOrEmpty(model.CardholderName) ||
+                    model.ExpiryMonth < 1 || model.ExpiryMonth > 12 ||
+                    model.ExpiryYear < DateTime.Now.Year ||
+                    string.IsNullOrEmpty(model.Cvc))
+                {
+                    ModelState.AddModelError("CardInfo", "信用卡信息不完整或无效");
+                    // Recompute totals for view
+                    var existingItems = await _context.CartItems
+                        .Include(ci => ci.Card)
+                        .Where(ci => ci.UserId == userId.Value)
+                        .ToListAsync();
+                    decimal subtotal = existingItems.Sum(i => (decimal)i.Card.CardPrice * i.Quantity);
+                    decimal deliveryCost = 5.5m;
+                    model.TotalAmount = subtotal + deliveryCost;
+                    return View(model);
+                }
+            }
+
+            // Load cart items from DB
+            var cartItems = await _context.CartItems
+                .Include(ci => ci.Card)
+                .Where(ci => ci.UserId == userId.Value)
+                .ToListAsync();
+
+            // Compute totals (for safety / order record)
+            decimal subtotalFinal = cartItems.Sum(i => (decimal)i.Card.CardPrice * i.Quantity);
+            decimal deliveryCostFinal = 5.5m;
+            decimal totalFinal = subtotalFinal + deliveryCostFinal;
+
+            // Save order to database (implement your own logic here)
+            SaveOrderToDatabase(cartItems, model);
+
+            // Clear user's cart in DB
+            if (cartItems.Any())
+            {
+                _context.CartItems.RemoveRange(cartItems);
+                await _context.SaveChangesAsync();
+            }
+
+            // Also clear any session-based cart (if used)
+            _httpContextAccessor.HttpContext?.Session.Remove("Cart");
+
+            // Redirect to payment success
+            return RedirectToAction("PaymentSuccess");
+        }
+
+        public IActionResult PaymentSuccess()
+        {
             return View();
         }
+
+        // ---------- 以下是购物车的辅助方法（假设你已有类似逻辑） ----------
+        private List<CartItem> GetCartItemsFromSession()
+        {
+            var session = _httpContextAccessor.HttpContext?.Session;
+            if (session == null)
+            {
+                return new List<CartItem>();
+            }
+
+            // ISession does not have a generic Get<T> method.
+            // You need to use Get/Set with byte[] and serialize/deserialize your objects.
+            // For demonstration, let's assume you use JSON serialization for CartItem list.
+
+            var cartBytes = session.TryGetValue("Cart", out var bytes) ? bytes : null;
+            if (cartBytes == null)
+            {
+                return new List<CartItem>();
+            }
+
+            // Use System.Text.Json for deserialization
+            return System.Text.Json.JsonSerializer.Deserialize<List<CartItem>>(cartBytes) ?? new List<CartItem>();
+        }
+
+        private void SaveOrderToDatabase(List<CartItem> items, CheckoutViewModel model)
+        {
+            // TODO: Implement order creation & persistence.
+            // For now this is a placeholder to be replaced by real order saving logic.
+        }
+
+        private void ClearCartSession()
+        {
+            _httpContextAccessor.HttpContext?.Session.Remove("Cart");
+        }
     }
-    
 }

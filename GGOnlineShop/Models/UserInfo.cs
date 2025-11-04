@@ -10,19 +10,26 @@ namespace GGOnlineShop.Models
     [Table("UserInfos")]
     public class UserInfo
     {
-        [Key] // 主键改为int类型
+        [Key]
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string Username { get; set; } = string.Empty; // 从主键改为普通唯一字段
+        [Required, MaxLength(50)]
+        public string Username { get; set; } = string.Empty;
+
+        // Make Email nullable for safe migration
+        [MaxLength(100)]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string? Email { get; set; } = null;
 
         [MaxLength(200)]
         public string Avatar { get; set; } = string.Empty;
+
         [MaxLength(200)]
         public string AvatarUrl { get; set; } = string.Empty;
+
         [NotMapped]
-        public IFormFile? AvatarFile { get; set; } // 用于上传头像文件
+        public IFormFile? AvatarFile { get; set; }
+
         public int? Age { get; set; }
 
         [MaxLength(20)]
@@ -32,16 +39,16 @@ namespace GGOnlineShop.Models
         public string FavoriteTeam { get; set; } = string.Empty;
 
         [Required, MaxLength(200)]
-        [DataType(DataType.Password)] // 标记为密码类型，页面会自动渲染为密码输入框
+        [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
-        [Required, MaxLength(200)]
+        [NotMapped]
         [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "两次输入的密码不一致")] // 与Password字段比对
-        [NotMapped] // 不映射到数据库（仅用于前端验证）
+        [Compare("Password", ErrorMessage = "两次输入的密码不一致")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
-        // 导航属性（初始化集合）
+        public bool IsAdmin { get; set; } = false;
+
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public virtual ICollection<UserCard> UserCards { get; set; } = new List<UserCard>();
     }
@@ -50,13 +57,23 @@ namespace GGOnlineShop.Models
     {
         public void Configure(EntityTypeBuilder<UserInfo> builder)
         {
-            builder.HasKey(u => u.Id); // 主键为Id（int类型）
+            builder.HasKey(u => u.Id);
             builder.Property(u => u.Username).IsRequired().HasMaxLength(50);
-            builder.HasIndex(u => u.Username).IsUnique(); // 保持用户名唯一
+            builder.HasIndex(u => u.Username).IsUnique();
+
+            // Email is optional at DB level initially
+            builder.Property(u => u.Email).HasMaxLength(100).IsRequired(false);
+
+            // Create a filtered unique index so NULL/empty values don't break it
+            builder.HasIndex(u => u.Email)
+                   .IsUnique()
+                   .HasFilter("[Email] IS NOT NULL AND Email <> ''");
+
+            builder.Property(u => u.IsAdmin).HasDefaultValue(false);
 
             builder.HasMany(u => u.UserCards)
                    .WithOne(uc => uc.User)
-                   .HasForeignKey(uc => uc.UserId) // 外键关联UserInfo.Id
+                   .HasForeignKey(uc => uc.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
         }
     }

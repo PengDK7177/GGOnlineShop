@@ -29,15 +29,27 @@ namespace GGOnlineShop.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Trim inputs
+                user.Username = user.Username?.Trim() ?? string.Empty;
+                user.Email = user.Email?.Trim() ?? string.Empty;
+
+                // Check username uniqueness
                 if (await _context.UserInfos.AnyAsync(u => u.Username == user.Username))
                 {
                     ModelState.AddModelError("Username", "用户名已存在");
                     return View(user);
                 }
 
+                // Check email uniqueness (case-insensitive)
+                var emailLower = user.Email.ToLowerInvariant();
+                if (await _context.UserInfos.AnyAsync(u => u.Email.ToLower() == emailLower))
+                {
+                    ModelState.AddModelError("Email", "该邮箱已被注册");
+                    return View(user);
+                }
+
                 // Store password as plain text (test project).
                 // NOTE: This is insecure for production.
-                // user.Password remains as provided;
 
                 if (user.AvatarFile != null && user.AvatarFile.Length > 0)
                 {
@@ -70,11 +82,16 @@ namespace GGOnlineShop.Controllers
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                ModelState.AddModelError("", "请输入用户名。");
+                ModelState.AddModelError("", "请输入用户名或邮箱。");
                 return View();
             }
 
-            var user = await _context.UserInfos.FirstOrDefaultAsync(u => u.Username == username);
+            var input = username.Trim();
+
+            // allow login by username OR email (case-insensitive for email)
+            var user = await _context.UserInfos
+                .FirstOrDefaultAsync(u => u.Username == input || u.Email.ToLower() == input.ToLower());
+
             if (user == null)
             {
                 ModelState.AddModelError("", "无效的用户名或密码。");
@@ -83,7 +100,7 @@ namespace GGOnlineShop.Controllers
 
             bool authenticated = false;
 
-            // Primary: plain-text comparison (reverted behavior for test project)
+            // Primary: plain-text comparison (test project)
             if (!string.IsNullOrEmpty(password) && user.Password == password)
             {
                 authenticated = true;
@@ -109,6 +126,14 @@ namespace GGOnlineShop.Controllers
             if (authenticated)
             {
                 HttpContext.Session.SetInt32("UserId", user.Id);
+                HttpContext.Session.SetString("IsAdmin", user.IsAdmin ? "1" : "0");
+
+                // If the account is admin, go to admin card management immediately.
+                if (user.IsAdmin)
+                {
+                    return RedirectToAction("Cards", "Admin");
+                }
+
                 return RedirectToAction("Index", "Home");
             }
 

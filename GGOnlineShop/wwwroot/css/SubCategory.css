@@ -35,3 +35,68 @@
     .card-info p {
         margin: 5px 0;
     }
+
+
+/* subcategory-bg.css - full-bleed backgrounds with translucent overlay */
+
+.subcategory-page {
+    position: relative;
+    width: 100vw;
+    margin-left: calc(50% - 50vw); /* full-bleed technique */
+    margin-right: calc(50% - 50vw);
+    min-height: calc(100vh - 140px); /* leave room for header/footer */
+    display: flex;
+    align-items: flex-start;
+    padding: 80px 0; /* top spacing for title */
+    box-sizing: border-box;
+    overflow: hidden; /* ensure pseudo elements don't create scrollbars */
+}
+
+/* Use ::before to render the background image with desired opacity (0.6) */
+.subcategory-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0.6;                /* <-- background transparency set here */
+    z-index: 0;
+    pointer-events: none;        /* allow clicks through the background */
+}
+
+/* Optional overlay on top of the image for readability (adjust alpha if needed) */
+.subcategory-page::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0,0,0,0.15); /* small darkening on top of image; tweak as needed */
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* content must be above pseudo elements */
+.subcategory-content {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+}
+
+/* Per-subcategory image assignments on the ::before pseudo-element */
+.subcategory-page.nba::before { background-image: url("/images/nba-bg.jpg"); }
+.subcategory-page.fiba::before { background-image: url("/images/fiba-bg.png"); }
+.subcategory-page.cba::before { background-image: url("/images/cba-bg.png"); }
+
+.subcategory-page.premier-league::before { background-image: url("/images/premier-league-bg.jpg"); }
+.subcategory-page.la-liga::before { background-image: url("/images/la-liga-bg.jpg"); }
+.subcategory-page.serie-a::before { background-image: url("/images/serie-a-bg.jpg"); }
+
+/* Per-category overlay intensity override if you want different darkness */
+.subcategory-page.nba::after { background-color: rgba(0,0,0,0.35); }
+.subcategory-page.premier-league::after { background-color: rgba(0,0,0,0.25); }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .subcategory-page { min-height: auto; padding: 40px 0; }
+    .card-img img { height: 140px; }
+}

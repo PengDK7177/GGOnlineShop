@@ -2,54 +2,70 @@
 
 @{
     ViewData["Title"] = "Your Shopping Cart";
-    decimal subtotal = (decimal)ViewData["Subtotal"];
+    decimal subtotal = 0m;
+    if (ViewData["Subtotal"] != null)
+    {
+        subtotal = (decimal)ViewData["Subtotal"];
+    }
 }
 
 <div class="cart-container">
-    <!-- 购物车列表 -->
-    <div class="cart-items">
-        @foreach (var item in Model)
-        {
-            <div class="cart-item">
-                <!-- 卡片图片 -->
-                <div class="item-img">
-                    <img src="@item.Card.CardImg" alt="@item.Card.PlayerName" />
-                </div>
-                <!-- 卡片信息 -->
-                <div class="item-info">
-                    <h3>@item.Card.PlayerName</h3>
-                    <p>单价：¥@item.Card.CardPrice</p>
-                </div>
-                <!-- 数量控制 -->
-                <div class="item-quantity">
-                    <button class="btn-minus" asp-action="RemoveFromCart" asp-controller="Cart" asp-route-id="@item.CardId">-</button>
-                    <span>@item.Quantity</span>
-                    <button class="btn-plus" asp-action="AddToCart" asp-controller="Cart" asp-route-id="@item.CardId">+</button>
-                </div>
-                <!-- 单项总价 -->
-                <div class="item-total">
-                    ¥@(item.Card.CardPrice* item.Quantity)
-                </div>
-                <!-- 删除按钮 -->
-                <div class="item-remove">
-                    <form asp-action="RemoveFromCart" asp-controller="Cart" method="post">
-                        <input type="hidden" name="id" value="@item.CardId" />
-                        <button type="submit">×</button>
-                    </form>
-                </div>
-            </div>
-        }
-    </div>
-
-    <!-- 底部操作区 -->
-    <div class="cart-footer">
-        <a asp-action="Index" asp-controller="Home" class="btn-back">Back to Shop</a>
-        <div class="cart-subtotal">
-            <span>Subtotal:</span>
-            <span>¥@subtotal</span>
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-cart text-center py-5">
+            <h3>Your Cart is still empty</h3>
+            <p class="text-muted">Browse the shop and add some items to your cart.</p>
+            <a asp-action="Index" asp-controller="Home" class="btn btn-primary mt-3">Back to Shop</a>
         </div>
-        <a asp-action="Checkout" asp-controller="Cart" asp-route-id="@(Model.FirstOrDefault()?.CardId ?? 0)" class="btn-checkout">Checkout</a>
-    </div>
+    }
+    else
+    {
+        <!-- 购物车列表 -->
+        <div class="cart-items">
+            @foreach (var item in Model)
+            {
+                <div class="cart-item">
+                    <!-- 卡片图片 -->
+                    <div class="item-img">
+                        <img src="@item.Card.CardImg" alt="@item.Card.PlayerName" />
+                    </div>
+                    <!-- 卡片信息 -->
+                    <div class="item-info">
+                        <h3>@item.Card.PlayerName</h3>
+                        <p>Unit Price：￡@item.Card.CardPrice</p>
+                    </div>
+                    <!-- 数量控制 -->
+                    <div class="item-quantity">
+                        <a class="btn btn-secondary btn-sm" asp-action="RemoveFromCart" asp-controller="Cart" asp-route-id="@item.CardId">-</a>
+                        <span class="mx-2">@item.Quantity</span>
+                        <a class="btn btn-secondary btn-sm" asp-action="AddToCart" asp-controller="Cart" asp-route-id="@item.CardId">+</a>
+                    </div>
+                    <!-- 单项总价 -->
+                    <div class="item-total">
+                        ¥@(item.Card.CardPrice * item.Quantity)
+                    </div>
+                    <!-- 删除按钮 -->
+                    <div class="item-remove">
+                        <form asp-action="RemoveFromCart" asp-controller="Cart" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.CardId" />
+                            <button type="submit" class="btn btn-danger btn-sm">×</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- 底部操作区 -->
+        <div class="cart-footer d-flex justify-content-between align-items-center mt-4">
+            <a asp-action="Index" asp-controller="Category" class="btn btn-outline-secondary">Back to Shop</a>
+            <div class="cart-subtotal">
+                <span class="me-2">Subtotal:</span>
+                <span class="fw-bold">￡@subtotal</span>
+            </div>
+            <a asp-action="Checkout" asp-controller="Cart" class="btn btn-warning">Checkout</a>
+        </div>
+    }
 </div>
 
 <style>
@@ -68,6 +84,7 @@
         align-items: center;
         padding: 15px;
         border-bottom: 1px solid #eee;
+        gap: 12px;
     }
 
     .item-img img {
@@ -86,45 +103,32 @@
         margin: 0 20px;
     }
 
-        .item-quantity button, .item-remove button {
-            width: 30px;
-            height: 30px;
-            border: none;
-            background-color: #ddd;
-            cursor: pointer;
-        }
+    .item-quantity a, .item-remove button {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background-color: #ddd;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        .item-quantity span {
-            width: 30px;
-            text-align: center;
-        }
+    .item-quantity span {
+        width: 36px;
+        text-align: center;
+    }
 
     .item-total {
         min-width: 100px;
         text-align: right;
     }
 
-    .cart-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .btn-back, .btn-checkout {
-        padding: 10px 20px;
-        text-decoration: none;
-        color: #333;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .btn-checkout {
-        background-color: #fcc000;
-        color: #fff;
-        border-color: #fcc000;
-    }
-
-    .cart-subtotal {
+    .cart-footer .cart-subtotal {
         font-weight: bold;
+    }
+
+    .empty-cart h3 {
+        margin-bottom: 0.5rem;
     }
 </style>

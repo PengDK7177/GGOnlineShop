@@ -1,0 +1,32 @@
+﻿@model List<GGOnlineShop.Models.Card>
+@{
+    ViewData["Title"] = "Admin - Cards";
+}
+<link rel="stylesheet" href="~/css/site.css" />
+<div class="container py-4">
+    <h2>Card Management</h2>
+    <p><a class="btn btn-primary" asp-action="CreateCard">Add New Card</a></p>
+    <table class="table table-striped">
+        <thead><tr><th>Img</th><th>Player</th><th>Team</th><th>Year</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+        <tbody>
+            @foreach(var c in Model) {
+                <tr>
+                    <td><img src="@c.CardImg" style="width:60px;height:auto" /></td>
+                    <td>@c.PlayerName</td>
+                    <td>@c.Team</td>
+                    <td>@c.CardYear</td>
+                    <td>¥@c.CardPrice</td>
+                    <td>@c.CardStock</td>
+                    <td>
+                        <a class="btn btn-sm btn-secondary" asp-action="EditCard" asp-route-id="@c.Id">Edit</a>
+                        <form asp-action="DeleteCard" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@c.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this card?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

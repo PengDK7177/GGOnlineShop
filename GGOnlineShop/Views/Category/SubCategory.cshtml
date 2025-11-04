@@ -1,29 +1,41 @@
 ﻿@model List<GGOnlineShop.Models.Card>
 @{
     ViewData["Title"] = "CardsCategory";
+    var subName = ViewData["SubCategoryName"] as string ?? "";
+    var subKey = ViewData["SubCategoryKey"] as string ?? "subcategory";
 }
+<link rel="stylesheet" href="~/css/SubCategory.css" asp-append-version="true" />
 
-<!-- 页面标题 -->
-<h1>Cards</h1>
+<!-- full-bleed background container with translucent overlay -->
+<div class="subcategory-page @subKey">
+    <div class="subcategory-content container">
+        <h1 class="mt-4 mb-3">@subName</h1>
 
-<!-- 卡片列表容器：网格布局 -->
-<div class="card-grid">
-    @foreach (var card in Model)
-    {
-        <!-- 单个球星卡卡片：点击跳转详情页 -->
-        <a asp-action="Details" asp-controller="Category" asp-route-id="@card.Id" class="card-item">
-            <div class="card-img">
-                <img src="@card.CardImg" alt="@card.PlayerName 球星卡" />
-            </div>
-            <div class="card-info">
-                <h3>@card.PlayerName</h3>
-                <p>Team：@card.Team</p>
-                <p>Year：@card.CardYear</p>
-                <p>Price：￡@card.CardPrice</p>
-                <p>Stock：@card.CardStock </p>
-            </div>
-        </a>
-    }
+        <!-- 卡片列表容器：网格布局 -->
+        <div class="card-grid">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="text-center text-muted py-5">No cards available in this category.</div>
+            }
+            else
+            {
+                @foreach (var card in Model)
+                {
+                    <!-- 单个球星卡卡片：点击跳转详情页 -->
+                    <a asp-action="Details" asp-controller="Category" asp-route-id="@card.Id" class="card-item">
+                        <div class="card-img">
+                            <img src="@card.CardImg" alt="@card.PlayerName 球星卡" />
+                        </div>
+                        <div class="card-info">
+                            <h3>@card.PlayerName</h3>
+                            <p>Team：@card.Team</p>
+                            <p>Year：@card.CardYear</p>
+                            <p>Price：￡@card.CardPrice</p>
+                            <p>Stock：@card.CardStock </p>
+                        </div>
+                    </a>
+                }
+            }
+        </div>
+    </div>
 </div>
-
-<!-- 样式（保持不变） -->
