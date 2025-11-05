@@ -3,6 +3,14 @@
     ViewData["Title"] = "CardsCategory";
     var subName = ViewData["SubCategoryName"] as string ?? "";
     var subKey = ViewData["SubCategoryKey"] as string ?? "subcategory";
+    var subId = ViewData["SubCategoryId"] ?? "";
+    var teams = (ViewBag.Teams as List<string>) ?? new List<string>();
+    var filter = ViewBag.Filter ?? new { YearFrom = (int?)null, YearTo = (int?)null, PriceFrom = (decimal?)null, PriceTo = (decimal?)null, Team = (string?)null };
+    int? yearFrom = filter.YearFrom;
+    int? yearTo = filter.YearTo;
+    decimal? priceFrom = filter.PriceFrom;
+    decimal? priceTo = filter.PriceTo;
+    string? team = filter.Team;
 }
 <link rel="stylesheet" href="~/css/SubCategory.css" asp-append-version="true" />
 
@@ -10,6 +18,8 @@
 <div class="subcategory-page @subKey">
     <div class="subcategory-content container">
         <h1 class="mt-4 mb-3">@subName</h1>
+
+       
 
         <!-- 卡片列表容器：网格布局 -->
         <div class="card-grid">

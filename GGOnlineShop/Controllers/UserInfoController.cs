@@ -48,8 +48,6 @@ namespace GGOnlineShop.Controllers
                     return View(user);
                 }
 
-                // Store password as plain text (test project).
-                // NOTE: This is insecure for production.
 
                 if (user.AvatarFile != null && user.AvatarFile.Length > 0)
                 {
@@ -100,7 +98,7 @@ namespace GGOnlineShop.Controllers
 
             bool authenticated = false;
 
-            // Primary: plain-text comparison (test project)
+       
             if (!string.IsNullOrEmpty(password) && user.Password == password)
             {
                 authenticated = true;

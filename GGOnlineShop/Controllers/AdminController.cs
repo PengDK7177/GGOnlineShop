@@ -6,6 +6,7 @@ using GGOnlineShop.Data;
 using GGOnlineShop.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GGOnlineShop.Controllers
 {
@@ -30,12 +31,28 @@ namespace GGOnlineShop.Controllers
         }
 
         // create
-        public IActionResult CreateCard() => View(new Card());
+        public async Task<IActionResult> CreateCard()
+        {
+            // populate third-level categories (ParentId != null)
+            var categories = await _db.Categories
+                .Where(c => c.ParentId != null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+            ViewBag.SubCategories = new SelectList(categories, "Id", "Name");
+            return View(new Card());
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCard(Card card, IFormFile? ImageFile)
         {
+            // repopulate categories for redisplay in case of error
+            var categories = await _db.Categories
+                .Where(c => c.ParentId != null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+            ViewBag.SubCategories = new SelectList(categories, "Id", "Name", card.CategoryId);
+
             if (!ModelState.IsValid) return View(card);
 
             if (ImageFile != null && ImageFile.Length > 0)
@@ -60,6 +77,13 @@ namespace GGOnlineShop.Controllers
         {
             var card = await _db.Cards.FindAsync(id);
             if (card == null) return NotFound();
+
+            var categories = await _db.Categories
+                .Where(c => c.ParentId != null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+            ViewBag.SubCategories = new SelectList(categories, "Id", "Name", card.CategoryId);
+
             return View(card);
         }
 
@@ -70,6 +94,13 @@ namespace GGOnlineShop.Controllers
             var card = await _db.Cards.FindAsync(id);
             if (card == null) return NotFound();
 
+            // repopulate categories for redisplay on error
+            var categories = await _db.Categories
+                .Where(c => c.ParentId != null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+            ViewBag.SubCategories = new SelectList(categories, "Id", "Name", posted.CategoryId);
+
             if (!ModelState.IsValid) return View(posted);
 
             card.PlayerName = posted.PlayerName;
@@ -79,6 +110,7 @@ namespace GGOnlineShop.Controllers
             card.CardPrice = posted.CardPrice;
             card.CardStock = posted.CardStock;
             card.CardDesc = posted.CardDesc;
+            card.CategoryId = posted.CategoryId; // ensure category is saved
             card.UpdateTime = DateTime.Now;
 
             if (ImageFile != null && ImageFile.Length > 0)

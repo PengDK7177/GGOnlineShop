@@ -7,10 +7,21 @@
     <form asp-action="EditCard" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" name="id" value="@Model.Id" />
+
         <div class="mb-3">
             <label asp-for="PlayerName"></label>
             <input asp-for="PlayerName" class="form-control" />
+            <span asp-validation-for="PlayerName" class="text-danger"></span>
         </div>
+
+        <div class="mb-3">
+            <label asp-for="CategoryId">Category (third-level)</label>
+            <select asp-for="CategoryId" asp-items="(SelectList)ViewBag.SubCategories" class="form-control">
+                <option value="">-- Select subcategory --</option>
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+
         <div class="mb-3">
             <label asp-for="Team"></label>
             <input asp-for="Team" class="form-control" />
@@ -41,3 +52,7 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

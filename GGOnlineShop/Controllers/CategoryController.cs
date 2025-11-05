@@ -16,7 +16,6 @@ namespace GGOnlineShop.Controllers
             _dbContext = dbContext;
         }
 
-
         // 商品“All”视图 - 从数据库查询所有商品
         public async Task<IActionResult> All()
         {
@@ -24,8 +23,6 @@ namespace GGOnlineShop.Controllers
             return View(cards);
         }
 
-      
-     
         // Basketball二级分类页面（含三级分类数据）
         public IActionResult Basketball()
         {
@@ -93,6 +90,36 @@ namespace GGOnlineShop.Controllers
             return View(cards);
         }
 
+        // "New" page: show newly listed cards using the SubCategory view
+        // GET: /Category/New
+        public async Task<IActionResult> New()
+        {
+            // Get latest cards (most recent first). Adjust Take() as desired.
+            var cards = await _dbContext.Cards
+                .OrderByDescending(c => c.CreateTime)
+                .Take(24)
+                .ToListAsync();
+
+            ViewData["SubCategoryName"] = "New Arrivals";
+            ViewData["SubCategoryKey"] = "new";
+
+            // Reuse the SubCategory view which expects a List<Card>
+            return View("SubCategory", cards);
+        }
+
+        // 新增商品（可选，用于测试数据录入）
+        [HttpPost]
+        public async Task<IActionResult> New(Card card)
+        {
+            if (ModelState.IsValid)
+            {
+                _dbContext.Cards.Add(card);
+                await _dbContext.SaveChangesAsync();
+                return RedirectToAction("All");
+            }
+            return View(card);
+        }
+
         public IActionResult SubSerieA(int id)
         {
             // 1. 查询三级分类（确保分类存在）
@@ -122,27 +149,6 @@ namespace GGOnlineShop.Controllers
             return View("CardDetails", card);
         }
 
-        // 新增商品（可选，用于测试数据录入）
-        public IActionResult New()
-        {
-            return View();
-        }
-
-
-
-
-        [HttpPost]
-        public async Task<IActionResult> New(Card card)
-        {
-            if (ModelState.IsValid)
-            {
-                _dbContext.Cards.Add(card);
-                await _dbContext.SaveChangesAsync();
-                return RedirectToAction("All");
-            }
-            return View(card);
-        }
-
         [HttpGet("Category/SubLaLiga")]
         public async Task<IActionResult> SubSerieA() // 方法名改为 SubLaLiga
         {
@@ -160,48 +166,40 @@ namespace GGOnlineShop.Controllers
                 .Where(sc => sc.CategoryId == serieaCategory.Id)
                 .ToListAsync();
 
-            // 3. 视图关联：若使用默认视图名，需创建 SubLaLiga.cshtml 视图
-            // （若想复用原有视图，可指定视图名：return View("SubCategory", subCategories);）
             return View(subCategories);
         }
-        public async Task<IActionResult> SubLaLiga() // 方法名改为 SubLaLiga
+
+        public async Task<IActionResult> SubLaLiga() // 方法 name retained
         {
-            // 2. 修改内部逻辑：将查询条件改为"La Liga"（确保数据库中分类名匹配）
             var laLigaCategory = await _dbContext.Categories
                 .FirstOrDefaultAsync(c => c.Name == "La Liga");
 
             if (laLigaCategory == null)
             {
-                return NotFound("西甲分类不存在"); // 提示信息同步修改
+                return NotFound("西甲分类不存在");
             }
 
-            // 获取西甲下的所有子分类（逻辑不变，仅关联的分类ID变化）
             var subCategories = await _dbContext.SubCategories
                 .Where(sc => sc.CategoryId == laLigaCategory.Id)
                 .ToListAsync();
 
-            // 3. 视图关联：若使用默认视图名，需创建 SubLaLiga.cshtml 视图
-            // （若想复用原有视图，可指定视图名：return View("SubCategory", subCategories);）
             return View(subCategories);
         }
-        public async Task<IActionResult> SubPremierLeague() // 方法名改为 SubLaLiga
+
+        public async Task<IActionResult> SubPremierLeague()
         {
-            // 2. 修改内部逻辑：将查询条件改为"Premier League"（确保数据库中分类名匹配）
             var premierleagueCategory = await _dbContext.Categories
                 .FirstOrDefaultAsync(c => c.Name == "Premier League");
 
             if (premierleagueCategory == null)
             {
-                return NotFound("英超分类不存在"); // 提示信息同步修改
+                return NotFound("英超分类不存在");
             }
 
-            // 获取西甲下的所有子分类（逻辑不变，仅关联的分类ID变化）
             var subCategories = await _dbContext.SubCategories
                 .Where(sc => sc.CategoryId == premierleagueCategory.Id)
                 .ToListAsync();
 
-            // 3. 视图关联：若使用默认视图名，需创建 SubLaLiga.cshtml 视图
-            // （若想复用原有视图，可指定视图名：return View("SubCategory", subCategories);）
             return View(subCategories);
         }
     }
