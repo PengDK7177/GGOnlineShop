@@ -20,31 +20,39 @@
     }
     else
     {
-        <!-- 购物车列表 -->
+        <!-- Cart items list -->
         <div class="cart-items">
             @foreach (var item in Model)
             {
                 <div class="cart-item">
-                    <!-- 卡片图片 -->
+                    <!-- Card image -->
                     <div class="item-img">
                         <img src="@item.Card.CardImg" alt="@item.Card.PlayerName" />
                     </div>
-                    <!-- 卡片信息 -->
+                    <!-- Card information -->
                     <div class="item-info">
                         <h3>@item.Card.PlayerName</h3>
                         <p>Unit Price：￡@item.Card.CardPrice</p>
                     </div>
-                    <!-- 数量控制 -->
+                    <!-- Quantity controls (decrease, increase, current quantity) -->
                     <div class="item-quantity">
+                        <!-- Decrease button: uses RemoveFromCart to decrement or remove -->
                         <a class="btn btn-secondary btn-sm" asp-action="RemoveFromCart" asp-controller="Cart" asp-route-id="@item.CardId">-</a>
+
+                        <!-- Increase button: submits a POST to AddToCart with antiforgery token to match controller [HttpPost] -->
+                        <form asp-action="AddToCart" asp-controller="Cart" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cardId" value="@item.CardId" />
+                            <button type="submit" class="btn btn-secondary btn-sm" @(item.Quantity >= item.Card.CardStock ? "disabled" : "")>+</button>
+                        </form>
+
                         <span class="mx-2">@item.Quantity</span>
-                        <a class="btn btn-secondary btn-sm" asp-action="AddToCart" asp-controller="Cart" asp-route-id="@item.CardId">+</a>
                     </div>
-                    <!-- 单项总价 -->
+                    <!-- Item total price -->
                     <div class="item-total">
                         ¥@(item.Card.CardPrice * item.Quantity)
                     </div>
-                    <!-- 删除按钮 -->
+                    <!-- Remove item button (full remove) -->
                     <div class="item-remove">
                         <form asp-action="RemoveFromCart" asp-controller="Cart" method="post">
                             @Html.AntiForgeryToken()
@@ -56,7 +64,7 @@
             }
         </div>
 
-        <!-- 底部操作区 -->
+        <!-- Footer area: navigation and subtotal -->
         <div class="cart-footer d-flex justify-content-between align-items-center mt-4">
             <a asp-action="Index" asp-controller="Category" class="btn btn-outline-secondary">Back to Shop</a>
             <div class="cart-subtotal">
@@ -103,15 +111,28 @@
         margin: 0 20px;
     }
 
-    .item-quantity a, .item-remove button {
+    /* Make both <a> and <button> controls share the same sizing and appearance */
+    .item-quantity a,
+    .item-quantity button,
+    .item-remove button {
         width: 32px;
         height: 32px;
+        box-sizing: border-box;
+        padding: 0;                     /* remove bootstrap padding so width/height control size */
+        line-height: 1;
+        font-size: 16px;
         border: none;
         background-color: #ddd;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .item-quantity a[disabled],
+    .item-quantity button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .item-quantity span {

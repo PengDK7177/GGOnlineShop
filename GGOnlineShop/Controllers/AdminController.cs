@@ -7,6 +7,7 @@ using GGOnlineShop.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 
 namespace GGOnlineShop.Controllers
 {
@@ -16,11 +17,13 @@ namespace GGOnlineShop.Controllers
     {
         private readonly AppDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(AppDbContext db, IWebHostEnvironment env)
+        public AdminController(AppDbContext db, IWebHostEnvironment env, ILogger<AdminController> logger)
         {
             _db = db;
             _env = env;
+            _logger = logger;
         }
 
         // list cards
@@ -30,7 +33,7 @@ namespace GGOnlineShop.Controllers
             return View(cards);
         }
 
-        // create
+        // create (GET)
         public async Task<IActionResult> CreateCard()
         {
             // populate third-level categories (ParentId != null)
@@ -42,34 +45,81 @@ namespace GGOnlineShop.Controllers
             return View(new Card());
         }
 
+        // create (POST) - improved: logs modelstate errors and exceptions
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCard(Card card, IFormFile? ImageFile)
         {
-            // repopulate categories for redisplay in case of error
             var categories = await _db.Categories
                 .Where(c => c.ParentId != null)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
-            ViewBag.SubCategories = new SelectList(categories, "Id", "Name", card.CategoryId);
+            ViewBag.SubCategories = new SelectList(categories, "Id", "Name", card?.CategoryId);
 
-            if (!ModelState.IsValid) return View(card);
+            // basic validation
+            if (card == null)
+                ModelState.AddModelError("", "Invalid card data.");
+            else if (card.CategoryId <= 0)
+                ModelState.AddModelError(nameof(card.CategoryId), "Please select a subcategory.");
+
+            if (!ModelState.IsValid)
+            {
+                foreach (var kv in ModelState)
+                {
+                    if (kv.Value.Errors?.Count > 0)
+                    {
+                        foreach (var err in kv.Value.Errors)
+                        {
+                            _logger.LogWarning("CreateCard model error: Field={Field} Error={Error}", kv.Key, err.ErrorMessage);
+                        }
+                    }
+                }
+                return View(card);
+            }
 
             if (ImageFile != null && ImageFile.Length > 0)
             {
-                var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
-                var uploadDir = Path.Combine(_env.WebRootPath, "uploads/cards");
-                Directory.CreateDirectory(uploadDir);
-                using var fs = new FileStream(Path.Combine(uploadDir, fileName), FileMode.Create);
-                await ImageFile.CopyToAsync(fs);
-                card.CardImg = $"/uploads/cards/{fileName}";
+                try
+                {
+                    var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                    var uploadDir = Path.Combine(_env.WebRootPath, "uploads/cards");
+                    Directory.CreateDirectory(uploadDir);
+                    using var fs = new FileStream(Path.Combine(uploadDir, fileName), FileMode.Create);
+                    await ImageFile.CopyToAsync(fs);
+                    card.CardImg = $"/uploads/cards/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to save uploaded image for CreateCard");
+                    ModelState.AddModelError("ImageFile", "Failed to save image. Try again.");
+                    return View(card);
+                }
             }
 
             card.CreateTime = DateTime.Now;
             card.UpdateTime = DateTime.Now;
-            _db.Cards.Add(card);
-            await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Cards));
+
+            try
+            {
+                _db.Cards.Add(card);
+                await _db.SaveChangesAsync();
+
+                _logger.LogInformation("Card created Id={Id} Player={Player}", card.Id, card.PlayerName);
+                TempData["AdminMessage"] = "Card successfully listed";
+                return RedirectToAction(nameof(Cards));
+            }
+            catch (Exception ex)
+            {
+                // Log full exception (including inner exceptions and stack trace)
+                _logger.LogError(ex, "Failed to create card. Full exception details: {Exception}", ex.ToString());
+
+                // Surface a short safe message for the UI. Also store the concise DB error in TempData for debugging if you need it.
+                var baseMsg = ex.GetBaseException().Message;
+                TempData["AdminMessage"] = "Failed to create card: " + (baseMsg.Length > 120 ? baseMsg.Substring(0, 120) + "…" : baseMsg);
+
+                // Return to Create view so the toast will show (redirect ensures TempData is preserved)
+                return RedirectToAction(nameof(CreateCard));
+            }
         }
 
         // edit
@@ -115,12 +165,21 @@ namespace GGOnlineShop.Controllers
 
             if (ImageFile != null && ImageFile.Length > 0)
             {
-                var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
-                var uploadDir = Path.Combine(_env.WebRootPath, "uploads/cards");
-                Directory.CreateDirectory(uploadDir);
-                using var fs = new FileStream(Path.Combine(uploadDir, fileName), FileMode.Create);
-                await ImageFile.CopyToAsync(fs);
-                card.CardImg = $"/uploads/cards/{fileName}";
+                try
+                {
+                    var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                    var uploadDir = Path.Combine(_env.WebRootPath, "uploads/cards");
+                    Directory.CreateDirectory(uploadDir);
+                    using var fs = new FileStream(Path.Combine(uploadDir, fileName), FileMode.Create);
+                    await ImageFile.CopyToAsync(fs);
+                    card.CardImg = $"/uploads/cards/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to save uploaded image for EditCard id={Id}", id);
+                    ModelState.AddModelError("ImageFile", "Failed to save image. Try again.");
+                    return View(posted);
+                }
             }
 
             _db.Update(card);

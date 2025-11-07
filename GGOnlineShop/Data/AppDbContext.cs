@@ -13,19 +13,19 @@ namespace GGOnlineShop.Data
         {
         }
 
-        // 只保留球星卡相关的DbSet
+        // Only keep DbSets related to player cards
         public DbSet<Category> Categories { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<UserInfo> UserInfos { get; set; }
         public DbSet<UserCard> UserCards { get; set; }
-        public DbSet<CartItem> CartItems { get; set; } // 购物车项
+        public DbSet<CartItem> CartItems { get; set; } // Cart items
         public DbSet<SubCategory> SubCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // 应用实体配置
+            // Apply entity configurations
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
             modelBuilder.ApplyConfiguration(new CardConfiguration());
             modelBuilder.ApplyConfiguration(new UserCardConfiguration());
@@ -34,10 +34,10 @@ namespace GGOnlineShop.Data
                 
           
 
-            // 配置CartItem的关联
+            // Configure relationships for CartItem
             modelBuilder.Entity<CartItem>(builder =>
             {
-                builder.HasKey(ci => new { ci.CardId, ci.UserId }); // 联合主键
+                builder.HasKey(ci => new { ci.CardId, ci.UserId }); // Composite primary key
 
                 builder.HasOne(ci => ci.Card)
                        .WithMany()
@@ -50,31 +50,31 @@ namespace GGOnlineShop.Data
                        .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // 初始化分类数据（之前的代码保留）
+            // Seed category data (previous code retained)
             SeedCategories(modelBuilder);
         }
 
         private void SeedCategories(ModelBuilder modelBuilder)
         {
-            // 1. 顶级分类 All
+            // 1. Top-level category: All
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "All", ParentId = null, SortOrder = 1, CreateTime = DateTime.Now }
             );
 
-            // 2. 二级分类 Basketball、Football
+            // 2. Second-level categories: Basketball, Football
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 2, Name = "Basketball", ParentId = 1, SortOrder = 2, CreateTime = DateTime.Now },
                 new Category { Id = 3, Name = "Football", ParentId = 1, SortOrder = 3, CreateTime = DateTime.Now }
             );
 
-            // 3. 三级分类 - Basketball 子分类
+            // 3. Third-level categories - Basketball subcategories
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 4, Name = "NBA", ParentId = 2, SortOrder = 4, CreateTime = DateTime.Now },
                 new Category { Id = 5, Name = "FIBA", ParentId = 2, SortOrder = 5, CreateTime = DateTime.Now },
                 new Category { Id = 6, Name = "CBA", ParentId = 2, SortOrder = 6, CreateTime = DateTime.Now }
             );
 
-            // 4. 三级分类 - Football 子分类
+            // 4. Third-level categories - Football subcategories
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 7, Name = "Serie A", ParentId = 3, SortOrder = 7, CreateTime = DateTime.Now },
                 new Category { Id = 8, Name = "La Liga", ParentId = 3, SortOrder = 8, CreateTime = DateTime.Now },

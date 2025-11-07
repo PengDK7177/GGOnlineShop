@@ -4,6 +4,10 @@
 }
 <div class="container py-4">
     <h2>Create Card</h2>
+
+    <!-- Show model-level validation summary -->
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
     <form asp-action="CreateCard" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
@@ -24,23 +28,45 @@
         <div class="mb-3">
             <label asp-for="Team"></label>
             <input asp-for="Team" class="form-control" />
+            <span asp-validation-for="Team" class="text-danger"></span>
         </div>
+
         <div class="mb-3">
             <label asp-for="CardYear"></label>
             <input asp-for="CardYear" class="form-control" />
+            <span asp-validation-for="CardYear" class="text-danger"></span>
         </div>
+
+        <div class="mb-3">
+            <label asp-for="CardGrade"></label>
+            <input asp-for="CardGrade" class="form-control" />
+            <span asp-validation-for="CardGrade" class="text-danger"></span>
+        </div>
+
         <div class="mb-3">
             <label asp-for="CardPrice"></label>
             <input asp-for="CardPrice" class="form-control" />
+            <span asp-validation-for="CardPrice" class="text-danger"></span>
         </div>
+
         <div class="mb-3">
             <label asp-for="CardStock"></label>
             <input asp-for="CardStock" class="form-control" />
+            <span asp-validation-for="CardStock" class="text-danger"></span>
         </div>
+
+        <div class="mb-3">
+            <label asp-for="CardDesc"></label>
+            <textarea asp-for="CardDesc" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="CardDesc" class="text-danger"></span>
+        </div>
+
         <div class="mb-3">
             <label>Image</label>
             <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+            <span class="text-muted small">Optional — use PNG/JPG</span>
         </div>
+
         <div class="mb-3">
             <button class="btn btn-primary" type="submit">Create</button>
             <a asp-action="Cards" class="btn btn-secondary ms-2">Back</a>

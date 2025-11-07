@@ -17,7 +17,7 @@ namespace GGOnlineShop.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // 注册功能
+        // Registeration function
         public IActionResult Register()
         {
             return View();
@@ -68,7 +68,7 @@ namespace GGOnlineShop.Controllers
             return View(user);
         }
 
-        //  登录功能
+        //  Login dunction
         public IActionResult Login()
         {
             return View();
@@ -139,7 +139,7 @@ namespace GGOnlineShop.Controllers
             return View();
         }
 
-        //  退出登录
+        //  Logout function
         public IActionResult Logout()
         {
             HttpContext.Session.Remove("UserId");

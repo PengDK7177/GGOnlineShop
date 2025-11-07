@@ -2,11 +2,17 @@
 
 <h1>Edit My Info</h1>
 
+<!--
+    Edit profile form.
+    - Avatar file input allows changing profile picture.
+    - Username is shown read-only because usernames are typically immutable; change requires special flow.
+    - Uses validation partial for client-side validation.
+-->
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
     <div class="form-group">
         <label asp-for="Username"></label>
-        <input asp-for="Username" class="form-control" readonly /> <!-- 用户名通常不可修改 -->
+        <input asp-for="Username" class="form-control" readonly /> <!-- Username is typically not editable -->
     </div>
     <div class="form-group">
         <label asp-for="Avatar"></label>

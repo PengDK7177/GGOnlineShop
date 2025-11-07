@@ -4,9 +4,9 @@
     ViewData["Title"] = "Card Details";
 }
 
-<!-- 页面布局：左侧信息 + 右侧图片 + 操作按钮 -->
+<!-- Page layout: left info column + right image column + action buttons -->
 <div class="detail-container">
-    <!-- 左侧信息区域 -->
+    <!-- Left information section: player details and action buttons -->
     <div class="info-section">
         <h1>@Model.PlayerName</h1>
         <p><strong>Team：</strong>@Model.Team</p>
@@ -15,7 +15,7 @@
         <p><strong>Price：</strong>￡@Model.CardPrice</p>
         <p><strong>Stock：</strong>@Model.CardStock </p>
 
-        <!-- 操作按钮 -->
+        <!-- Action buttons: Purchase link and Add-to-cart form (uses AJAX below) -->
         <div class="button-group">
             <a asp-action="Checkout" asp-controller="Cart" asp-route-id="@Model.Id" class="btn-get-now">!Get Now!</a>
 
@@ -27,13 +27,13 @@
         </div>
     </div>
 
-    <!-- 右侧图片区域 -->
+    <!-- Right image section: show the card image -->
     <div class="image-section">
         <img src="@Model.CardImg" alt="@Model.PlayerName 球星卡" class="card-img" />
     </div>
 </div>
 
-<!-- Toast container (Bootstrap) -->
+<!-- Toast container (Bootstrap) used to show add-to-cart feedback -->
 <div aria-live="polite" aria-atomic="true" style="position: fixed; top: 1rem; right: 1rem; z-index: 2000;">
     <div id="cartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
         <div class="toast-header">
@@ -51,6 +51,8 @@
             $(function () {
                 var $form = $('#addToCartForm');
                 var $toastEl = $('#cartToast');
+
+                // Attach AJAX submit handler to add-to-cart form so UI remains on the page
                 $form.on('submit', function (e) {
                     e.preventDefault();
 
@@ -63,14 +65,14 @@
                         data: $form.serialize(),
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         success: function (resp) {
-                            // Server returns JSON for AJAX requests (success/needLogin/message)
+                            // Server returns JSON for AJAX requests: { success, needLogin, message, quantity }
                             if (resp && resp.success) {
-                                // show toast for 2 seconds (data-bs-delay=2000)
+                                // display success toast for the configured delay (data-bs-delay=2000)
                                 var toast = bootstrap.Toast.getOrCreateInstance($toastEl.get(0));
                                 $toastEl.find('.toast-body').text(resp.message || 'Add successfully');
                                 toast.show();
                             } else if (resp && resp.needLogin) {
-                                // redirect to login if needed
+                                // redirect to login if user is not authenticated
                                 window.location.href = '/UserInfo/Login';
                             } else {
                                 var msg = (resp && resp.message) ? resp.message : 'Add failed';

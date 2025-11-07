@@ -6,6 +6,12 @@
 
 <h1>Register</h1>
 
+<!--
+    Registration form.
+    - Uses antiforgery token for POST protection.
+    - Avatar upload is optional.
+    - Client and server side validation are enabled via data annotations and unobtrusive scripts.
+-->
 <form asp-action="Register" method="post" enctype="multipart/form-data" autocomplete="off">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="All" class="text-danger mb-3"></div>

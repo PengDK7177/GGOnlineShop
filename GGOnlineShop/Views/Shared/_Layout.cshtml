@@ -134,5 +134,29 @@
         });
     </script>
     @RenderSection("Scripts", required: false)
+@if (TempData["AdminMessage"] != null)
+{
+    <div aria-live="polite" aria-atomic="true" style="position: fixed; top: 1rem; right: 1rem; z-index: 2000;">
+        <div id="adminToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <strong class="me-auto">Admin</strong>
+                <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">@TempData["AdminMessage"]</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var tEl = document.getElementById('adminToast');
+            if (tEl && window.bootstrap && typeof bootstrap.Toast === 'function') {
+                var bsToast = bootstrap.Toast.getOrCreateInstance(tEl);
+                bsToast.show();
+            } else if (tEl && window.jQuery) {
+                $(tEl).toast('show');
+            }
+        });
+    </script>
+}
 </body>
 </html>

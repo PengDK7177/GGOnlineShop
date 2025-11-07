@@ -14,14 +14,20 @@
 }
 <link rel="stylesheet" href="~/css/SubCategory.css" asp-append-version="true" />
 
-<!-- full-bleed background container with translucent overlay -->
+<!-- Full-bleed background container with translucent overlay.
+     The view receives a 'subKey' CSS class (e.g. "nba", "fiba") to apply per-category background images.
+     The overlay ensures content remains readable over the background image.
+-->
 <div class="subcategory-page @subKey">
     <div class="subcategory-content container">
         <h1 class="mt-4 mb-3">@subName</h1>
 
-       
+        <!--
+            Filter form (year, price, team) is rendered above the card grid in the controller/view pairing.
+            Filters are passed via query string so results are bookmarkable and shareable.
+        -->
 
-        <!-- 卡片列表容器：网格布局 -->
+        <!-- Card list container: grid layout -->
         <div class="card-grid">
             @if (Model == null || !Model.Any())
             {
@@ -31,7 +37,11 @@
             {
                 @foreach (var card in Model)
                 {
-                    <!-- 单个球星卡卡片：点击跳转详情页 -->
+                    <!--
+                        Single player-card tile.
+                        The anchor links to the Details action so clicking opens the card detail page.
+                        Card information is shown inside the tile (name, team, year, price, stock).
+                    -->
                     <a asp-action="Details" asp-controller="Category" asp-route-id="@card.Id" class="card-item">
                         <div class="card-img">
                             <img src="@card.CardImg" alt="@card.PlayerName 球星卡" />

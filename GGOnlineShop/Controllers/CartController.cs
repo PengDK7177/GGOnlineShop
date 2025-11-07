@@ -44,6 +44,7 @@ namespace GGOnlineShop.Controllers
         }
 
         // POST: /Cart/AddToCart
+        // Modified AddToCart action: enforce stock limits and return proper JSON or redirect.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart(int cardId)
@@ -58,24 +59,42 @@ namespace GGOnlineShop.Controllers
                 return RedirectToAction("Login", "UserInfo");
             }
 
+            // Load card to check stock
+            var card = await _context.Cards.FindAsync(cardId);
+            if (card == null)
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = "Card not found." });
+                return NotFound();
+            }
+
             var existing = await _context.CartItems
                 .FirstOrDefaultAsync(ci => ci.CardId == cardId && ci.UserId == userId.Value);
 
             if (existing != null)
             {
+                // Prevent adding beyond available stock
+                if (existing.Quantity >= card.CardStock)
+                {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                        return Json(new { success = false, message = "Cannot add more than available stock." });
+
+                    TempData["CartMessage"] = "Cannot add more than available stock.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 existing.Quantity++;
                 _context.Update(existing);
             }
             else
             {
-                var card = await _context.Cards.FindAsync(cardId);
-                if (card == null)
+                if (card.CardStock <= 0)
                 {
                     if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    {
-                        return Json(new { success = false, message = "Card not found." });
-                    }
-                    return NotFound();
+                        return Json(new { success = false, message = "Out of stock." });
+
+                    TempData["CartMessage"] = "Out of stock.";
+                    return RedirectToAction(nameof(Index));
                 }
 
                 var cartItem = new CartItem
@@ -91,7 +110,6 @@ namespace GGOnlineShop.Controllers
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                // Return JSON for AJAX callers (include new quantity if useful)
                 var qty = existing != null ? existing.Quantity : 1;
                 return Json(new { success = true, message = "Added to cart", quantity = qty });
             }
@@ -237,18 +255,40 @@ namespace GGOnlineShop.Controllers
             decimal deliveryCostFinal = 5.5m;
             decimal totalFinal = subtotalFinal + deliveryCostFinal;
 
-            // Save order to database (implement your own logic here)
-            SaveOrderToDatabase(cartItems, model);
-
-            // Clear user's cart in DB
-            if (cartItems.Any())
+            // Attempt to create order and decrement stock inside a transaction
+            try
             {
-                _context.CartItems.RemoveRange(cartItems);
-                await _context.SaveChangesAsync();
+                await SaveOrderToDatabaseAsync(cartItems, model, userId.Value);
             }
+            catch (InvalidOperationException ex)
+            {
+                // business validation (e.g. insufficient stock)
+                ModelState.AddModelError("", ex.Message);
 
-            // Also clear any session-based cart (if used)
-            _httpContextAccessor.HttpContext?.Session.Remove("Cart");
+                // recompute totals and return view
+                var existingItems = await _context.CartItems
+                    .Include(ci => ci.Card)
+                    .Where(ci => ci.UserId == userId.Value)
+                    .ToListAsync();
+
+                decimal subtotal = existingItems.Sum(i => (decimal)i.Card.CardPrice * i.Quantity);
+                model.TotalAmount = subtotal + 5.5m;
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                // unexpected
+                ModelState.AddModelError("", "An error occurred while processing the order. Please try again.");
+                // log if you have logger (not shown here)
+                var existingItems = await _context.CartItems
+                    .Include(ci => ci.Card)
+                    .Where(ci => ci.UserId == userId.Value)
+                    .ToListAsync();
+
+                decimal subtotal = existingItems.Sum(i => (decimal)i.Card.CardPrice * i.Quantity);
+                model.TotalAmount = subtotal + 5.5m;
+                return View(model);
+            }
 
             // Redirect to payment success
             return RedirectToAction("PaymentSuccess");
@@ -259,7 +299,48 @@ namespace GGOnlineShop.Controllers
             return View();
         }
 
-        // ---------- 以下是购物车的辅助方法（假设你已有类似逻辑） ----------
+        // ---------- 以下是购物车的辅助方法 ----------
+
+        private async Task SaveOrderToDatabaseAsync(List<CartItem> items, CheckoutViewModel model, int userId)
+        {
+            if (items == null || !items.Any())
+                throw new InvalidOperationException("Your cart is empty.");
+
+            // Use a transaction to ensure stock update + cart removal are atomic
+            await using var tx = await _context.Database.BeginTransactionAsync();
+
+            // Reload cards with tracking in a single query to minimize concurrency issues
+            var cardIds = items.Select(i => i.CardId).Distinct().ToList();
+            var cards = await _context.Cards
+                .Where(c => cardIds.Contains(c.Id))
+                .ToListAsync();
+
+            // Validate stock and decrement
+            foreach (var item in items)
+            {
+                var card = cards.FirstOrDefault(c => c.Id == item.CardId);
+                if (card == null)
+                    throw new InvalidOperationException($"Card (Id={item.CardId}) no longer exists.");
+
+                if (card.CardStock < item.Quantity)
+                    throw new InvalidOperationException($"Insufficient stock for \"{card.PlayerName}\". Available: {card.CardStock}, required: {item.Quantity}.");
+
+                card.CardStock -= item.Quantity;
+                _context.Cards.Update(card);
+            }
+
+            // TODO: create Order/OrderItem records here if you want order history.
+            // For now, persist stock changes and remove cart items.
+
+            await _context.SaveChangesAsync();
+
+            // remove cart items for user (only those processed)
+            _context.CartItems.RemoveRange(items);
+            await _context.SaveChangesAsync();
+
+            await tx.CommitAsync();
+        }
+
         private List<CartItem> GetCartItemsFromSession()
         {
             var session = _httpContextAccessor.HttpContext?.Session;
@@ -268,24 +349,13 @@ namespace GGOnlineShop.Controllers
                 return new List<CartItem>();
             }
 
-            // ISession does not have a generic Get<T> method.
-            // You need to use Get/Set with byte[] and serialize/deserialize your objects.
-            // For demonstration, let's assume you use JSON serialization for CartItem list.
-
             var cartBytes = session.TryGetValue("Cart", out var bytes) ? bytes : null;
             if (cartBytes == null)
             {
                 return new List<CartItem>();
             }
 
-            // Use System.Text.Json for deserialization
             return System.Text.Json.JsonSerializer.Deserialize<List<CartItem>>(cartBytes) ?? new List<CartItem>();
-        }
-
-        private void SaveOrderToDatabase(List<CartItem> items, CheckoutViewModel model)
-        {
-            // TODO: Implement order creation & persistence.
-            // For now this is a placeholder to be replaced by real order saving logic.
         }
 
         private void ClearCartSession()

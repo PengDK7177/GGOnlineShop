@@ -12,7 +12,7 @@
     <div class="checkout-container">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-        <!-- 支付方式选择 -->
+        <!-- Payment method selection -->
         <div class="payment-methods">
             <label>
                 <input asp-for="SelectedPaymentMethod" type="radio" value="Mastercard" />
@@ -32,7 +32,7 @@
             </label>
         </div>
 
-        <!-- 信用卡信息表单（仅当选择信用卡时显示，这里简化为始终显示） -->
+        <!-- Credit card details form (shown always here; in production you can hide/show based on SelectedPaymentMethod) -->
         <div class="card-details">
             <div class="form-group">
                 <label asp-for="CardNumber"></label>
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        <!-- 订单金额汇总 -->
+        <!-- Order summary (subtotal and delivery) -->
         <div class="order-summary">
             <p>Subtotal (items): ￡@(Model.TotalAmount - 5.5m)</p>
             <p>Home delivery cost: ￡5.5</p>
@@ -85,7 +85,7 @@
             <h4>TOTAL AMOUNT: ￡@Model.TotalAmount</h4>
         </div>
 
-        <!-- 确认支付按钮 -->
+        <!-- Confirm payment button -->
         <div class="mt-3">
             <button type="submit" class="btn btn-primary btn-lg">CONFIRM PAYMENT</button>
         </div>

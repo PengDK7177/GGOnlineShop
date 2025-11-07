@@ -10,64 +10,64 @@ namespace GGOnlineShop.Controllers
     {
         private readonly AppDbContext _dbContext;
 
-        // 依赖注入 DbContext
+        // Inject AppDbContext via constructor
         public CategoryController(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        // 商品“All”视图 - 从数据库查询所有商品
+        // "All" view - query all cards from the database
         public async Task<IActionResult> All()
         {
             var cards = await _dbContext.Cards.ToListAsync();
             return View(cards);
         }
 
-        // Basketball二级分类页面（含三级分类数据）
+        // Basketball secondary category page (includes third-level subcategories)
         public IActionResult Basketball()
         {
-            // 查询Basketball二级分类（Id=2）
+            // Find the Basketball parent category (Id = 2)
             var basketballCategory = _dbContext.Categories.FirstOrDefault(c => c.Id == 2);
             if (basketballCategory == null)
             {
                 return NotFound();
             }
 
-            // 查询Basketball下的三级分类（NBA、FIBA、CBA）
+            // Load third-level categories under Basketball (NBA, FIBA, CBA)
             var subCategories = _dbContext.Categories
                 .Where(c => c.ParentId == 2)
                 .OrderBy(c => c.SortOrder)
                 .ToList();
 
-            // 传递二级分类和三级分类数据到视图
+            // Pass subcategory list to the view
             ViewData["SubCategories"] = subCategories;
-            // 将父分类作为模型传递给视图
+            // Return the Basketball view
             return View();
         }
 
-        // Football二级分类页面（含三级分类数据）
+        // Football secondary category page (includes third-level subcategories)
         public IActionResult Football()
         {
-            // 查询Football二级分类（Id=3）
+            // Find the Football parent category (Id = 3)
             var footballCategory = _dbContext.Categories.FirstOrDefault(c => c.Id == 3);
             if (footballCategory == null)
             {
                 return NotFound();
             }
 
-            // 查询Football下的三级分类（Serie A、La Liga、Premier League）
+            // Load third-level categories under Football (Serie A, La Liga, Premier League)
             var subCategories = _dbContext.Categories
                 .Where(c => c.ParentId == 3)
                 .OrderBy(c => c.SortOrder)
                 .ToList();
 
-            // 传递二级分类和三级分类数据到视图
+            // Pass subcategory list to the view
             ViewData["SubCategories"] = subCategories;
-            // 将父分类作为模型传递给视图
+            // Return the Football view with the parent category as model
             return View(footballCategory);
         }
 
-        // 三级分类页面（示例：NBA页面）
+        // Third-level category page (example: NBA page)
         public async Task<IActionResult> SubCategory(int id)
         {
             var subCategory = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Id == id);
@@ -76,12 +76,12 @@ namespace GGOnlineShop.Controllers
                 return NotFound();
             }
 
-            // load cards under this subcategory
+            // Load cards that belong to this subcategory
             var cards = await _dbContext.Cards
                 .Where(c => c.CategoryId == id)
                 .ToListAsync();
 
-            //  safe css key: lowercase, replace non-word with '-'
+            // Generate a safe CSS class key from the category name (lowercase, hyphen-separated)
             var key = Regex.Replace(subCategory.Name ?? string.Empty, @"[^\w]+", "-").Trim('-').ToLowerInvariant();
 
             ViewData["SubCategoryName"] = subCategory.Name;
@@ -107,7 +107,7 @@ namespace GGOnlineShop.Controllers
             return View("SubCategory", cards);
         }
 
-        // 新增商品（可选，用于测试数据录入）
+        // Add new card (optional, for test data entry)
         [HttpPost]
         public async Task<IActionResult> New(Card card)
         {
@@ -120,48 +120,48 @@ namespace GGOnlineShop.Controllers
             return View(card);
         }
 
+        // Generic third-level listing by id (kept for compatibility)
         public IActionResult SubSerieA(int id)
         {
-            // 1. 查询三级分类（确保分类存在）
+            // Find the specified subcategory
             var subSerieA = _dbContext.Categories.FirstOrDefault(c => c.Id == id);
             if (subSerieA == null)
             {
                 return NotFound();
             }
 
-            // 2. 查询该三级分类下的所有球星卡（假设 Card 表有 CategoryId 外键关联分类）
+            // Load cards for this subcategory
             var cards = _dbContext.Cards
-                .Where(c => c.CategoryId == id) // 通过 CategoryId 关联三级分类
+                .Where(c => c.CategoryId == id)
                 .ToList();
 
-            // 3. 将卡片数据传递到视图
             return View(cards);
         }
 
-        // 球星卡详情页面
+        // Card details page
         public async Task<IActionResult> Details(int id)
         {
             var card = await _dbContext.Cards.FirstOrDefaultAsync(p => p.Id == id);
             if (card == null)
                 return NotFound();
 
-            // explicitly render the CardDetails view (existing file Views/Category/CardDetails.cshtml)
+            // Explicitly render the CardDetails view
             return View("CardDetails", card);
         }
 
+        // Route for Serie A helper - resolves to Serie A category
         [HttpGet("Category/SubLaLiga")]
-        public async Task<IActionResult> SubSerieA() // 方法名改为 SubLaLiga
+        public async Task<IActionResult> SubSerieA()
         {
-            // 2. 修改内部逻辑：将查询条件改为"La Liga"（确保数据库中分类名匹配）
+            // Find Serie A category by name
             var serieaCategory = await _dbContext.Categories
                 .FirstOrDefaultAsync(c => c.Name == "Serie A");
 
             if (serieaCategory == null)
             {
-                return NotFound("意甲分类不存在"); // 提示信息同步修改
+                return NotFound("Serie A category does not exist");
             }
 
-            // 获取西甲下的所有子分类（逻辑不变，仅关联的分类ID变化）
             var subCategories = await _dbContext.SubCategories
                 .Where(sc => sc.CategoryId == serieaCategory.Id)
                 .ToListAsync();
@@ -169,14 +169,15 @@ namespace GGOnlineShop.Controllers
             return View(subCategories);
         }
 
-        public async Task<IActionResult> SubLaLiga() // 方法 name retained
+        // La Liga page - return subcategories for La Liga
+        public async Task<IActionResult> SubLaLiga()
         {
             var laLigaCategory = await _dbContext.Categories
                 .FirstOrDefaultAsync(c => c.Name == "La Liga");
 
             if (laLigaCategory == null)
             {
-                return NotFound("西甲分类不存在");
+                return NotFound("La Liga category does not exist");
             }
 
             var subCategories = await _dbContext.SubCategories
@@ -186,6 +187,7 @@ namespace GGOnlineShop.Controllers
             return View(subCategories);
         }
 
+        // Premier League page - return subcategories for Premier League
         public async Task<IActionResult> SubPremierLeague()
         {
             var premierleagueCategory = await _dbContext.Categories
@@ -193,7 +195,7 @@ namespace GGOnlineShop.Controllers
 
             if (premierleagueCategory == null)
             {
-                return NotFound("英超分类不存在");
+                return NotFound("Premier League category does not exist");
             }
 
             var subCategories = await _dbContext.SubCategories
